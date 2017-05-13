@@ -28,7 +28,6 @@ class NotifyService {
 
 		//queue a message to send to the client
 		public addMessage(String message) {
-			println("client adding message "+message)
 			queue.offer(message)
 		}
 
@@ -79,14 +78,13 @@ class NotifyService {
 	ConcurrentHashMap<String,QueueReader> readerMap=new ConcurrentHashMap<String,QueueReader>()
 
 	synchronized relayMessage(String awsQueue,String message) { //since we may have lots of queues, let's synchronized this so we don't conflict during cleanup
-		println("relaying message "+message)
+		println("Relaying message "+message)
 		def expired=[] //client we want to shut down
 		long now=System.currentTimeMillis() //get the current time
 		clientMap.each { k, v -> //look at all the clients
 			if ((now-v.lastRead)>expirationTime) { //if it's been too long, schedule client to be shut down
 				expired<<k
 			} else {
-				println(v.awsQueue+" vs. "+awsQueue)
 				if (v.awsQueue==awsQueue) { //if the client is listening on our queue
 					v.addMessage(message) //then send it the message
 				}

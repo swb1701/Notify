@@ -78,7 +78,7 @@
 			</div>
 		</div>
 
-		<g:javascript library="application"/>
+		<!--<g:javascript library="application"/>-->
 		<r:layoutResources />
 		<script>
 			var activeMenu = function(id) {
