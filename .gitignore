@@ -1,0 +1,9 @@
+/bin
+/.settings
+/target-eclipse
+/.classpath
+/.project
+/target
+/logs
+/web-app/.ebextensions/ssl.config
+/web-app/extra/rad.txt
