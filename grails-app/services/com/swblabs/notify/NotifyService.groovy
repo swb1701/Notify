@@ -1,12 +1,16 @@
 package com.swblabs.notify
 
 import grails.transaction.Transactional
+import groovy.json.JsonSlurper
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.services.polly.AmazonPollyClient
+import com.amazonaws.services.polly.model.SynthesizeSpeechRequest
+import com.amazonaws.services.polly.model.SynthesizeSpeechResult
 import com.amazonaws.services.sqs.AmazonSQSClient
 import com.amazonaws.services.sqs.model.Message
 import com.amazonaws.services.sqs.model.ReceiveMessageResult
@@ -14,14 +18,15 @@ import com.amazonaws.services.sqs.model.ReceiveMessageResult
 @Transactional
 class NotifyService {
 
-	static int longPollTime=10000; //how long to wait on a long poll
+	static int longPollTime=20000; //how long to wait on a long poll
 	static int expirationTime=40000; //when a client expires
+	def grailsApplication
 
 	class Client {
 		String awsQueue
 		long lastRead=System.currentTimeMillis() //the last time the client was accessed
 		LinkedBlockingQueue<String> queue=new LinkedBlockingQueue<String>() //queue of messages for the client
-		
+
 		public Client(String awsQueue) {
 			this.awsQueue=awsQueue
 		}
@@ -47,7 +52,8 @@ class NotifyService {
 		}
 
 		def readQueue(String awsQueue,String user,String pass) {
-			Thread.start { //run as a background thread
+			Thread.start {
+				//run as a background thread
 				AmazonSQSClient sqs=null
 				if (user!=null) {
 					sqs=new AmazonSQSClient(new BasicAWSCredentials(user,pass)) //use the provided credentials
@@ -73,7 +79,7 @@ class NotifyService {
 
 	//a map from token/session keys to clients
 	ConcurrentHashMap<String,Client> clientMap=new ConcurrentHashMap<String,Client>()
-	
+
 	//a map from aws queue name to readers to track the queue readers
 	ConcurrentHashMap<String,QueueReader> readerMap=new ConcurrentHashMap<String,QueueReader>()
 
@@ -81,7 +87,8 @@ class NotifyService {
 		println("Relaying message "+message)
 		def expired=[] //client we want to shut down
 		long now=System.currentTimeMillis() //get the current time
-		clientMap.each { k, v -> //look at all the clients
+		clientMap.each { k, v ->
+			//look at all the clients
 			if ((now-v.lastRead)>expirationTime) { //if it's been too long, schedule client to be shut down
 				expired<<k
 			} else {
@@ -90,7 +97,8 @@ class NotifyService {
 				}
 			}
 		}
-		expired.each { key -> //lets clean up expired stuff
+		expired.each { key ->
+			//lets clean up expired stuff
 			println("Shutting down idle client "+key)
 			Client client=clientMap[key] //find the expired client
 			if (client!=null) {
@@ -128,7 +136,41 @@ class NotifyService {
 					readerMap[token.queue]=reader //make a record of it for later cleanup/shutdown
 				}
 			}
-			return(client.getMessage())
+			String result=client.getMessage()
+			return(result)
 		}
 	}
+
+	def getAudio(String tokstr,String sessionId,OutputStream out) {
+		String msg=getMessage(tokstr,sessionId)
+		if (msg!=null) {
+			Token token=Token.findByName(tokstr)
+			if (token!=null) {
+				Map cmd=[:]
+				try {
+					def jsonSlurper=new JsonSlurper()
+					cmd=jsonSlurper.parseText(msg)
+				} catch (Exception e) {
+					cmd=[cmd:"Speak",text:msg]
+				}
+				if (cmd.cmd=="Speak") {
+					AmazonPollyClient polly=null
+					if (token.user!=null) {
+						polly=new AmazonPollyClient(new BasicAWSCredentials(token.user,token.pass)) //use the provided credentials
+					} else {
+						polly=new AmazonPollyClient() //use role credentials for the VM (or environment credentials)
+					}
+					SynthesizeSpeechRequest req=new SynthesizeSpeechRequest().withVoiceId("Salli").withTextType('ssml').withText('<prosody volume="x-loud">'+cmd.text+'</prosody>').withOutputFormat("mp3")
+					SynthesizeSpeechResult res=polly.synthesizeSpeech(req)
+					out<<res.getAudioStream()
+					out.flush()
+					return
+				}
+			}
+		}
+		def file=grailsApplication.parentContext.getResource("250mil.mp3").file //250 millis of silence
+		out<<file.bytes
+		out.flush()
+	}
+
 }

@@ -30,7 +30,7 @@ grails.project.dependency.resolution = {
 	}
 
 	dependencies {
-		runtime "com.amazonaws:aws-java-sdk:1.7.3"
+		runtime "com.amazonaws:aws-java-sdk:1.11.127"
 		runtime 'mysql:mysql-connector-java:5.1.22'
 
 	}
