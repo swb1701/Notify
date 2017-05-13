@@ -15,6 +15,7 @@ function poll() {
 	setTimeout(function() {
 		console.log("making audio call");
 		var a=new Audio("/api/getAudio?token=${token}");
+		$('#notifylogo').transition('tada');
 		a.play();
 		a.addEventListener('ended',function() {
 			console.log("finished playing audio");
