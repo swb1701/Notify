@@ -13,7 +13,7 @@ and get the next text message (getMessageNoSession).  It may also get an audio r
 of the message (getAudio).
 
 Notify manages feeding from the SQS queues such that only one fetch is done from the SQS queue
-no matter how many token need the next message from that queue.  This support a number of notification
+no matter how many tokens need the next message from that queue.  This support a number of notification
 clients receiving the same message at the same time from the queue.  It also tracks clients by both
 token and session -- so you can have multiple browsers on multiple machines feeding from the same
 queue.  For devices (see https://github.com/swb1701/NotiPi.git) a unique token can be employed
