@@ -13,7 +13,7 @@ and get the next text message (getMessageNoSession).  It may also get an audio r
 of the message (getAudio).
 
 Notify manages feeding from the SQS queues such that only one fetch is done from the SQS queue
-no matter how many tokens need the next message from that queue.  This support a number of notification
+no matter how many tokens need the next message from that queue.  This supports a number of notification
 clients receiving the same message at the same time from the queue.  It also tracks clients by both
 token and session -- so you can have multiple browsers on multiple machines feeding from the same
 queue.  For devices (see https://github.com/swb1701/NotiPi.git) a unique token can be employed
@@ -33,6 +33,6 @@ Clients may handle various types of parameters and may not support all the optio
 the Notify server itself only supports the most basic text and simple JSON commands.  NotiPi supports
 volume control.  You can also use Prosody within the SSML to change volume, pitch, etc... on all clients.
 
-Notify has a built in javascript audio polling routine.  It also an easy matter to drop a small amount
+Notify has a built in javascript audio polling routine.  Its also an easy matter to drop a small amount
 of javascript into any web page to give it audio notification capability feeding from a Notify server.  I'll
 post an example of that soon.
