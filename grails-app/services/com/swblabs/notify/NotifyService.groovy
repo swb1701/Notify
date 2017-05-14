@@ -150,10 +150,11 @@ class NotifyService {
 				try {
 					def jsonSlurper=new JsonSlurper()
 					cmd=jsonSlurper.parseText(msg)
+					println("json:"+cmd)
 				} catch (Exception e) {
-					cmd=[cmd:"Speak",text:msg]
+					cmd=[cmd:"speak",text:msg]
 				}
-				if (cmd.cmd=="Speak") {
+				if (cmd.cmd.toLowerCase()=="speak") {
 					AmazonPollyClient polly=null
 					if (token.user!=null) {
 						polly=new AmazonPollyClient(new BasicAWSCredentials(token.user,token.pass)) //use the provided credentials
