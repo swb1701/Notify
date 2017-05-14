@@ -22,6 +22,15 @@ class ApiController {
 			render(text:/{"cmd":"none"}/)
 		}
 	}
+	
+	def getMessageNoSession(String token) {
+		String result=NotifyService.getMessage(token,"nosession")
+		if (result!=null) {
+			render(text:result)
+		} else {
+			render(text:/{"cmd":"none"}/)
+		}
+	}
 
 	def getAudio(String token) {
 		response.setContentType('audio/mpeg')
