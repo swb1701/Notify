@@ -24,7 +24,9 @@ Notify is mostly designed for synthesized audio messages to be delivered.  Plain
 the queue will be read directly.  JSON messages in the queue can take forms like:
 
 {"cmd":"speak","text":"the text to speak"} <-- speaks "the text to speak"
+
 {"cmd":"update"} <-- updates the notify client on devices (see https://github.com/swb1701/NotiPi.git)
+
 {"cmd":"speak","text":"speak this in a specific voice","voice":"salli","volume":0.5} <-- speak in a specific voice (see Polly) and at a specific volume
 
 Clients may handle various types of parameters and may not support all the options yet.  Currently,
