@@ -34,5 +34,37 @@ the Notify server itself only supports the most basic text and simple JSON comma
 volume control.  You can also use Prosody within the SSML to change volume, pitch, etc... on all clients.
 
 Notify has a built in javascript audio polling routine.  Its also an easy matter to drop a small amount
-of javascript into any web page to give it audio notification capability feeding from a Notify server.  I'll
-post an example of that soon.
+of javascript into any web page to give it audio notification capability feeding from a Notify server.  A
+sample fragment of an HTML page is included below:
+
+```javascript
+...
+<input type="checkbox" onchange='audioChange(this);'>Audio Notifications   
+...
+<script>
+var audioOn=1;
+function audioChange(cb) {
+	if (cb.checked==true) {
+		//start audio notifications
+		audioOn=1;
+		poll();
+	} else {
+		audioOn=0;
+		//stop audio notifications
+	}
+}
+var notifyUrl='${notifyUrl}';
+function poll() {
+	setTimeout(function() {
+		console.log("making audio call");
+		var a=new Audio(notifyUrl);
+		a.play();
+		a.addEventListener('ended',function() {
+			console.log("finished playing audio");
+			if (audioOn==1)	poll();
+		});
+	}, 1);
+};
+</script>  
+...
+```
