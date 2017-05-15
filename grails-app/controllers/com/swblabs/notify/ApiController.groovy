@@ -15,16 +15,8 @@ class ApiController {
 	}
 
 	def getMessage(String token) {
-		String result=NotifyService.getMessage(token,session.getId())
-		if (result!=null) {
-			render(text:result)
-		} else {
-			render(text:/{"cmd":"none"}/)
-		}
-	}
-	
-	def getMessageNoSession(String token) {
-		String result=NotifyService.getMessage(token,"nosession")
+		String sessionId=(params.key==null)?session.getId():"fixed"+params.key //allow optional fixed key instead of session
+		String result=NotifyService.getMessage(token,sessionId)
 		if (result!=null) {
 			render(text:result)
 		} else {

@@ -9,7 +9,7 @@ if desired).
 
 A client may retrieve messages from the notifier using the token in a few ways.  It may act as a web
 client and receive the next text message (getMessage).  It may be a sessionless device
-and get the next text message (getMessageNoSession).  It may also get an audio representation
+and get the next text message (getMessage with optional key parameter).  It may also get an audio representation
 of the message (getAudio).
 
 Notify manages feeding from the SQS queues such that only one fetch is done from the SQS queue
