@@ -68,3 +68,8 @@ function poll() {
 </script>  
 ...
 ```
+
+In the above code sample ${notifyUrl} would be substituted with the URL of your deployed server in
+format like:
+
+https://yourserver.yourdomain.com/api/getAudio?token=yourtoken
