@@ -23,16 +23,6 @@ class ApiController {
 			render(text:/{"cmd":"none"}/)
 		}
 	}
-	
-	/* deprecated -- switch to adding optional key parameter to getMessage */
-	def getMessageNoSession(String token) {
-		String result=NotifyService.getMessage(token,"nosession")
-		if (result!=null) {
-			render(text:result)
-		} else {
-			render(text:/{"cmd":"none"}/)
-		}
-	}
 
 	def getAudio(String token) {
 		response.setContentType('audio/mpeg')
