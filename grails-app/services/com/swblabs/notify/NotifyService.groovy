@@ -180,9 +180,9 @@ class NotifyService {
 	}
 
 	def slack(String message) {
-		SlackHook.all.each { hookUrl ->
+		SlackHook.all.each { hook ->
 			try {
-					def http = new HTTPBuilder(hookUrl)
+					def http = new HTTPBuilder(hook.slackUrl)
 					http.request(groovyx.net.http.Method.POST, groovyx.net.http.ContentType.JSON) { req ->
 						body = [
 							username: "Notifier",
