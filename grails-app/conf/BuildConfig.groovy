@@ -32,7 +32,6 @@ grails.project.dependency.resolution = {
 	dependencies {
 		runtime "com.amazonaws:aws-java-sdk:1.11.127"
 		runtime 'mysql:mysql-connector-java:5.1.22'
-
 	}
 
 	plugins {
@@ -48,7 +47,8 @@ grails.project.dependency.resolution = {
 		compile ":spring-security-ui:1.0-RC2"
 		compile ":spring-security-core:2.0-RC5"
 		compile ":jquery-ui:1.10.4"
-
+		compile ":rest:0.8"
+		
 	}
 }
 codenarc.reports = {

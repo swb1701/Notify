@@ -2,6 +2,7 @@ package com.swblabs.notify
 
 import grails.transaction.Transactional
 import groovy.json.JsonSlurper
+import groovyx.net.http.HTTPBuilder
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
@@ -100,11 +101,13 @@ class NotifyService {
 		expired.each { key ->
 			//lets clean up expired stuff
 			println("Shutting down idle client "+key)
+			slack("Shutting down idle client "+key)
 			Client client=clientMap[key] //find the expired client
 			if (client!=null) {
 				clientMap.remove(key) //remove from the map
 				if (!clientMap.values().find{it.awsQueue=awsQueue}) { //look if anyone else is still reading its awsQueue
 					println("Shutting down idle queue reader for "+awsQueue)
+					slack("Shutting down idle queue reader for "+awsQueue)
 					QueueReader reader=readerMap[awsQueue] //if so, find that reader
 					if (reader!=null) {
 						reader.shutdown() //signal it to shutdown
@@ -127,10 +130,12 @@ class NotifyService {
 			Client client=clientMap.get(key)
 			if (client==null) {
 				println("Making a new client for "+key)
+				slack("Making new client for "+key)
 				client=new Client(token.queue) //make a new client
 				clientMap.put(key,client)
 				if (readerMap[token.queue]==null) { //if we don't have anyone reading the desired queue
 					println("Making a new reader for "+token.queue)
+					slack("Making new reader for "+token.queue)
 					QueueReader reader=new QueueReader() //make a reader
 					reader.readQueue(token.queue,token.user,token.pass) //kick off a thread to read the queue
 					readerMap[token.queue]=reader //make a record of it for later cleanup/shutdown
@@ -172,6 +177,24 @@ class NotifyService {
 		def file=grailsApplication.parentContext.getResource("250mil.mp3").file //250 millis of silence
 		out<<file.bytes
 		out.flush()
+	}
+
+	def slack(String message) {
+		SlackHook.all.each { hookUrl ->
+			try {
+					def http = new HTTPBuilder(hookUrl)
+					http.request(groovyx.net.http.Method.POST, groovyx.net.http.ContentType.JSON) { req ->
+						body = [
+							username: "Notifier",
+							text: message
+						]
+						response.success = { resp ->
+						}
+					}
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+		}
 	}
 
 }
