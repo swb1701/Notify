@@ -42,30 +42,31 @@ sample fragment of an HTML page is included below:
 <input type="checkbox" onchange='audioChange(this);'>Audio Notifications   
 ...
 <script>
-var audioOn=1;
-function audioChange(cb) {
-	if (cb.checked==true) {
-		//start audio notifications
-		audioOn=1;
-		poll();
-	} else {
-		audioOn=0;
-		//stop audio notifications
-	}
-}
-var notifyUrl='${notifyUrl}';
+window.onerror = function(message, file, line, col, error) {
+	waitPoll();
+	return false;
+};
+window.addEventListener("unhandledrejection", function(err, promise) { 
+	waitPoll();
+	return false;
+});
+var token='${token}';
 function poll() {
 	setTimeout(function() {
-		console.log("making audio call");
-		var a=new Audio(notifyUrl);
-		a.play();
-		a.addEventListener('ended',function() {
-			console.log("finished playing audio");
-			if (audioOn==1)	poll();
-		});
+			console.log("making audio call");
+			var a=new Audio("/api/getAudio?token=${token}");
+			a.play();
+			a.addEventListener('ended', function() {
+				console.log("finished playing audio");
+				poll();
+			});
 	}, 1);
 };
-</script>  
+function waitPoll() {
+	setTimeout(poll,10000);
+}
+poll();
+</script>
 ...
 ```
 
