@@ -22,6 +22,7 @@ class NotifyService {
 	static int longPollTime=20000; //how long to wait on a long poll
 	static int expirationTime=40000; //when a client expires
 	def grailsApplication
+	static Object lock=new Object();
 
 	class Client {
 		String awsQueue
@@ -77,7 +78,7 @@ class NotifyService {
 		}
 
 	}
-	
+
 	String maskKey(String key) {
 		return("..."+key.substring(key.lastIndexOf("/")))
 	}
@@ -130,19 +131,21 @@ class NotifyService {
 		if (token==null) {
 			return(/{"cmd":"speak","text":"Sorry, access denied"}/)
 		} else {
-			String key=token.name+"/"+sessionId //give unique stream for each session
-			Client client=clientMap.get(key)
-			if (client==null) {
-				println("Making a new client for "+key)
-				slack("Making new client for "+maskKey(key))
-				client=new Client(token.queue) //make a new client
-				clientMap.put(key,client)
-				if (readerMap[token.queue]==null) { //if we don't have anyone reading the desired queue
-					println("Making a new reader for "+token.queue)
-					slack("Making new reader for "+maskKey(token.queue))
-					QueueReader reader=new QueueReader() //make a reader
-					reader.readQueue(token.queue,token.user,token.pass) //kick off a thread to read the queue
-					readerMap[token.queue]=reader //make a record of it for later cleanup/shutdown
+			synchronized(lock) { //only let one thread through here at once to avoid race condition (and two readers for the same queue)
+				String key=token.name+"/"+sessionId //give unique stream for each session
+				Client client=clientMap.get(key)
+				if (client==null) {
+					println("Making a new client for "+key)
+					slack("Making new client for "+maskKey(key))
+					client=new Client(token.queue) //make a new client
+					clientMap.put(key,client)
+					if (readerMap[token.queue]==null) { //if we don't have anyone reading the desired queue
+						println("Making a new reader for "+token.queue)
+						slack("Making new reader for "+maskKey(token.queue))
+						QueueReader reader=new QueueReader() //make a reader
+						reader.readQueue(token.queue,token.user,token.pass) //kick off a thread to read the queue
+						readerMap[token.queue]=reader //make a record of it for later cleanup/shutdown
+					}
 				}
 			}
 			String result=client.getMessage()
@@ -186,15 +189,15 @@ class NotifyService {
 	def slack(String message) {
 		SlackHook.all.each { hook ->
 			try {
-					def http = new HTTPBuilder(hook.slackUrl)
-					http.request(groovyx.net.http.Method.POST, groovyx.net.http.ContentType.JSON) { req ->
-						body = [
-							username: "Notifier",
-							text: message
-						]
-						response.success = { resp ->
-						}
+				def http = new HTTPBuilder(hook.slackUrl)
+				http.request(groovyx.net.http.Method.POST, groovyx.net.http.ContentType.JSON) { req ->
+					body = [
+						username: "Notifier",
+						text: message
+					]
+					response.success = { resp ->
 					}
+				}
 			} catch (Exception e) {
 				e.printStackTrace()
 			}
