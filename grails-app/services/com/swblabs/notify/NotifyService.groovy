@@ -131,9 +131,10 @@ class NotifyService {
 		if (token==null) {
 			return(/{"cmd":"speak","text":"Sorry, access denied"}/)
 		} else {
+			Client client
 			synchronized(lock) { //only let one thread through here at once to avoid race condition (and two readers for the same queue)
 				String key=token.name+"/"+sessionId //give unique stream for each session
-				Client client=clientMap.get(key)
+				client=clientMap.get(key)
 				if (client==null) {
 					println("Making a new client for "+key)
 					slack("Making new client for "+maskKey(key))
