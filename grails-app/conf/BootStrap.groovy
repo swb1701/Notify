@@ -1,5 +1,5 @@
+import com.amazonaws.services.lambda.model.Environment
 import com.swblabs.notify.Role
-import com.swblabs.notify.Token
 import com.swblabs.notify.User
 import com.swblabs.notify.UserRole
 
@@ -7,6 +7,7 @@ class BootStrap {
 
 	def springSecurityService
 	def searchableService
+	def NotifyService
 
 	def createUser(user,pass,role) {
 		def theUser = new User(username:user,password:pass)
@@ -24,6 +25,9 @@ class BootStrap {
 
 				createUser('admin','adminnf',adminRole)
 				createUser('user','usernf',userRole)
+			}
+			if (Environment.current != Environment.DEVELOPMENT) {
+				NotifyService.slack("Notify Server Started")
 			}
 		} catch (Exception e) {
 			log.error("Exception during bootstrap init", e)
