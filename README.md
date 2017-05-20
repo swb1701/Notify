@@ -42,6 +42,17 @@ sample fragment of an HTML page is included below:
 <input type="checkbox" onchange='audioChange(this);'>Audio Notifications   
 ...
 <script>
+var audioOn=1;
+function audioChange(cb) {
+	if (cb.checked==true) {
+		//start audio notifications
+		audioOn=1;
+		poll();
+	} else {
+		audioOn=0;
+		//stop audio notifications
+	}
+}
 window.onerror = function(message, file, line, col, error) {
 	waitPoll();
 	return false;
@@ -58,14 +69,13 @@ function poll() {
 			a.play();
 			a.addEventListener('ended', function() {
 				console.log("finished playing audio");
-				poll();
+				if (audioOn==1) poll();
 			});
 	}, 1);
 };
 function waitPoll() {
-	setTimeout(poll,10000);
+	if (audioOn==1) setTimeout(poll,10000);
 }
-poll();
 </script>
 ...
 ```
