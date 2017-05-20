@@ -50,11 +50,11 @@ window.addEventListener("unhandledrejection", function(err, promise) {
 	waitPoll();
 	return false;
 });
-var token='${token}';
+var token='${notifyUrl}';
 function poll() {
 	setTimeout(function() {
 			console.log("making audio call");
-			var a=new Audio("/api/getAudio?token=${token}");
+			var a=new Audio(notifyUrl);
 			a.play();
 			a.addEventListener('ended', function() {
 				console.log("finished playing audio");
