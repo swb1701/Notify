@@ -11,9 +11,13 @@
 </div>
 <script>
 window.onerror = function(message, file, line, col, error) {
-	console.log("Error:"+error.message);
 	waitPoll();
-}
+	return false;
+};
+window.addEventListener("unhandledrejection", function(err, promise) { 
+	waitPoll();
+	return false;
+});
 var token='${token}';
 function poll() {
 	setTimeout(function() {
