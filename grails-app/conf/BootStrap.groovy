@@ -1,4 +1,5 @@
-import com.amazonaws.services.lambda.model.Environment
+
+import grails.util.Environment
 import com.swblabs.notify.Role
 import com.swblabs.notify.User
 import com.swblabs.notify.UserRole
