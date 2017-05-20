@@ -10,10 +10,13 @@
 	<h2>Poll Audio</h2>
 </div>
 <script>
+window.onerror = function(message, file, line, col, error) {
+	console.log("Error:"+error.message);
+	waitPoll();
+}
 var token='${token}';
 function poll() {
 	setTimeout(function() {
-		try {
 			console.log("making audio call");
 			var a=new Audio("/api/getAudio?token=${token}");
 			$('#notifylogo').transition('tada');
@@ -22,10 +25,6 @@ function poll() {
 				console.log("finished playing audio");
 				poll();
 			});
-		} catch (err) {
-			console.log(err);
-			waitPoll();
-		};
 	}, 1);
 };
 function waitPoll() {
