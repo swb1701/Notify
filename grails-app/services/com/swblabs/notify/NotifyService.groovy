@@ -186,9 +186,14 @@ class NotifyService {
 		out<<file.bytes
 		out.flush()
 	}
-
+	
 	def slack(String message) {
-		SlackHook.all.each { hook ->
+		slack("default",message)
+	}
+
+	def slack(String name,String message) {
+		SlackHook hook=SlackHook.findByName(name)
+		if (hook!=null) {
 			try {
 				def http = new HTTPBuilder(hook.slackUrl)
 				http.request(groovyx.net.http.Method.POST, groovyx.net.http.ContentType.JSON) { req ->
@@ -202,6 +207,8 @@ class NotifyService {
 			} catch (Exception e) {
 				e.printStackTrace()
 			}
+		} else {
+			println("Slack Hook ${name} Not Found")
 		}
 	}
 
