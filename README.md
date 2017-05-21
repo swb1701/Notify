@@ -61,7 +61,7 @@ window.addEventListener("unhandledrejection", function(err, promise) {
 	waitPoll();
 	return false;
 });
-var token='${notifyUrl}';
+var notifyUrl='${notifyUrl}';
 function poll() {
 	setTimeout(function() {
 			console.log("making audio call");
