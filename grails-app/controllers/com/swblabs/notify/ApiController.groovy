@@ -13,6 +13,11 @@ class ApiController {
 	def pollAudio(String token) {
 		["token":token]
 	}
+	
+	def notificationTest() {
+		NotifyService.handleNotifications()
+		render(text:"OK")
+	}
 
 	def getMessage(String token) {
 		String sessionId=(params.key==null)?session.getId():"fixed"+params.key //allow optional fixed key instead of session

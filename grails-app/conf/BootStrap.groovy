@@ -1,8 +1,10 @@
 
 import grails.util.Environment
+
 import com.swblabs.notify.Role
 import com.swblabs.notify.User
 import com.swblabs.notify.UserRole
+import com.swblabs.notify.jobs.NotificationJob
 
 class BootStrap {
 
@@ -30,6 +32,8 @@ class BootStrap {
 			if (Environment.current != Environment.DEVELOPMENT) {
 				NotifyService.slack("Notify Server Started")
 			}
+			println("Starting Notification Job...")
+			NotificationJob.schedule("0 0/1 * * * ?") //every minute on the minute
 		} catch (Exception e) {
 			log.error("Exception during bootstrap init", e)
 		}

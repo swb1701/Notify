@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
+import org.quartz.CronExpression
+
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.services.polly.AmazonPollyClient
 import com.amazonaws.services.polly.model.SynthesizeSpeechRequest
@@ -191,16 +193,20 @@ class NotifyService {
 		slack("default",message)
 	}
 
-	def slack(String name,String message) {
+	def slack(String name,String message,String channel=null) {
 		SlackHook hook=SlackHook.findByName(name)
 		if (hook!=null) {
 			try {
 				def http = new HTTPBuilder(hook.slackUrl)
-				http.request(groovyx.net.http.Method.POST, groovyx.net.http.ContentType.JSON) { req ->
-					body = [
+				def map = [
 						username: "Notifier",
 						text: message
-					]
+				]
+				if (channel!=null) {
+					map["channel"]=channel
+				}
+				http.request(groovyx.net.http.Method.POST, groovyx.net.http.ContentType.JSON) { req ->
+					body = map
 					response.success = { resp ->
 					}
 				}
@@ -209,6 +215,28 @@ class NotifyService {
 			}
 		} else {
 			println("Slack Hook ${name} Not Found")
+		}
+	}
+	
+	def handleNotifications() {
+		Date now=new Date() //grab the current date/time
+		Notification.all.each { note ->
+			if (note.cronString!=null) {
+				try {
+					CronExpression ce=new CronExpression('* '+note.cronString)
+					if (ce.isSatisfiedBy(now)) {
+						println(note.notifyMessage+" is satisfied at "+now)
+						if (note.slackHookName!=null && note.slackMessage!=null) {
+							slack(note.slackHookName,note.slackMessage,note.slackChannel) //send slack message
+						}
+						if (note.queue!=null) {
+							relayMessage(note.queue,note.notifyMessage) //send notify message
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace()
+				}
+			}
 		}
 	}
 
