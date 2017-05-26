@@ -25,6 +25,7 @@ class NotifyService {
 	static int expirationTime=40000; //when a client expires
 	def grailsApplication
 	static Object lock=new Object();
+	static Map keyToIP=[:]
 
 	class Client {
 		String awsQueue
@@ -107,8 +108,8 @@ class NotifyService {
 		}
 		expired.each { key ->
 			//lets clean up expired stuff
-			println("Shutting down idle client "+key)
-			slack("Shutting down idle client "+maskKey(key))
+			println("Shutting down idle client "+key+" at "+keyToIP[key])
+			slack("Shutting down idle client "+maskKey(key)+" at "+keyToIP[key])
 			Client client=clientMap[key] //find the expired client
 			if (client!=null) {
 				clientMap.remove(key) //remove from the map
@@ -128,7 +129,7 @@ class NotifyService {
 	/*
 	 * Get a message using a given token and session id
 	 */
-	String getMessage(String tokstr,String sessionId) {
+	String getMessage(String tokstr,String sessionId,String ip) {
 		Token token=Token.findByName(tokstr)
 		if (token==null) {
 			return(/{"cmd":"speak","text":"Sorry, access denied"}/)
@@ -136,10 +137,11 @@ class NotifyService {
 			Client client
 			synchronized(lock) { //only let one thread through here at once to avoid race condition (and two readers for the same queue)
 				String key=token.name+"/"+sessionId //give unique stream for each session
+				keyToIP[key]=ip
 				client=clientMap.get(key)
 				if (client==null) {
-					println("Making a new client for "+key)
-					slack("Making new client for "+maskKey(key))
+					println("Making a new client for "+key+" at "+ip)
+					slack("Making new client for "+maskKey(key)+" at "+ip)
 					client=new Client(token.queue) //make a new client
 					clientMap.put(key,client)
 					if (readerMap[token.queue]==null) { //if we don't have anyone reading the desired queue
@@ -156,8 +158,8 @@ class NotifyService {
 		}
 	}
 
-	def getAudio(String tokstr,String sessionId,OutputStream out) {
-		String msg=getMessage(tokstr,sessionId)
+	def getAudio(String tokstr,String sessionId,String ip,OutputStream out) {
+		String msg=getMessage(tokstr,sessionId,ip)
 		if (msg!=null) {
 			Token token=Token.findByName(tokstr)
 			if (token!=null) {
