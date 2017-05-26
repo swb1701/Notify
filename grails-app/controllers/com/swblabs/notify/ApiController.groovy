@@ -19,6 +19,13 @@ class ApiController {
 		render(text:"OK")
 	}
 
+	def test() {	
+		request.headerNames.each { name ->
+			println(name+"="+request.getHeader(name))
+		}
+		println("remote addr="+request.getRemoteAddr())
+	}
+
 	def getMessage(String token) {
 		String sessionId=(params.key==null)?session.getId():"fixed"+params.key //allow optional fixed key instead of session
 		String ip=request.getHeader("x-forwarded-for")
