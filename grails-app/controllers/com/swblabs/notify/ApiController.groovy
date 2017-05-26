@@ -28,7 +28,7 @@ class ApiController {
 
 	def getMessage(String token) {
 		String sessionId=(params.key==null)?session.getId():"fixed"+params.key //allow optional fixed key instead of session
-		String ip=request.getHeader("x-forwarded-for")
+		String ip=request.getRemoteAddr()
 		String result=NotifyService.getMessage(token,sessionId,ip)
 		if (result!=null) {
 			render(text:result)
@@ -43,7 +43,7 @@ class ApiController {
 		response.setHeader("Cache-Control","no-store")
 		response.setHeader("Content-Disposition","attachment; notify.mp3")
 		//response.outputStream.flush()
-		String ip=request.getHeader("x-forwarded-for")
+		String ip=request.getRemoteAddr()
 		NotifyService.getAudio(token,session.getId(),ip,response.outputStream)
 	}
 }
