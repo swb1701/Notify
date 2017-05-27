@@ -117,13 +117,13 @@ class NotifyService {
 			Client client=clientMap[key] //find the expired client
 			if (client!=null) {
 				clientMap.remove(key) //remove from the map
-				if (!clientMap.values().find{it.awsQueue=awsQueue}) { //look if anyone else is still reading its awsQueue
-					println("Shutting down idle queue reader for "+awsQueue)
-					slack("Shutting down idle queue reader for "+maskKey(awsQueue))
-					QueueReader reader=readerMap[awsQueue] //if so, find that reader
+				if (!clientMap.values().find{it.awsQueue=client.awsQueue}) { //look if anyone else is still reading its awsQueue
+					println("Shutting down idle queue reader for "+client.awsQueue)
+					slack("Shutting down idle queue reader for "+maskKey(client.awsQueue))
+					QueueReader reader=readerMap[client.awsQueue] //if so, find that reader
 					if (reader!=null) {
 						reader.shutdown() //signal it to shutdown
-						readerMap.remove(awsQueue) //and remove it from our list
+						readerMap.remove(client.awsQueue) //and remove it from our list
 					}
 				}
 			}

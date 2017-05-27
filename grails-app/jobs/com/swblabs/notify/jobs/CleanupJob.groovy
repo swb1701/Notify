@@ -11,6 +11,10 @@ class CleanupJob {
 
 	void execute(JobExecutionContext context) {
 		JobDataMap dataMap=context.getJobDetail().getJobDataMap()
-		NotifyService.cleanupThreads()
+		try {
+			NotifyService.cleanupThreads()
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 	}
 }

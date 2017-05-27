@@ -11,6 +11,10 @@ class NotificationJob {
 
 	void execute(JobExecutionContext context) {
 		JobDataMap dataMap=context.getJobDetail().getJobDataMap()
-		NotifyService.handleNotifications()
+		try {
+			NotifyService.handleNotifications()
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 	}
 }
