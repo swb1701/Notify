@@ -134,7 +134,7 @@ class NotifyService {
 	 * Get a message using a given token and session id
 	 */
 	String getMessage(String tokstr,String sessionId,String ip,String btle=null) {
-		if (btle!=null) println("btle="+btle)
+		if (btle!=null) println("sessionId=${sessionId} ip=${ip} btle=${btle}")
 		Token token=Token.findByName(tokstr)
 		if (token==null) {
 			return(/{"cmd":"speak","text":"Sorry, access denied"}/)
