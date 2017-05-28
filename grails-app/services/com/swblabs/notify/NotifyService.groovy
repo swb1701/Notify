@@ -133,7 +133,8 @@ class NotifyService {
 	/*
 	 * Get a message using a given token and session id
 	 */
-	String getMessage(String tokstr,String sessionId,String ip) {
+	String getMessage(String tokstr,String sessionId,String ip,String btle=null) {
+		if (btle!=null) println("btle="+btle)
 		Token token=Token.findByName(tokstr)
 		if (token==null) {
 			return(/{"cmd":"speak","text":"Sorry, access denied"}/)
@@ -162,8 +163,8 @@ class NotifyService {
 		}
 	}
 
-	def getAudio(String tokstr,String sessionId,String ip,OutputStream out) {
-		String msg=getMessage(tokstr,sessionId,ip)
+	def getAudio(String tokstr,String sessionId,String ip,OutputStream out,String btle=null) {
+		String msg=getMessage(tokstr,sessionId,ip,btle)
 		if (msg!=null) {
 			Token token=Token.findByName(tokstr)
 			if (token!=null) {

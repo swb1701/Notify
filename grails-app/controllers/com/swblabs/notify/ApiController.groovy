@@ -29,7 +29,8 @@ class ApiController {
 	def getMessage(String token) {
 		String sessionId=(params.key==null)?session.getId():"fixed"+params.key //allow optional fixed key instead of session
 		String ip=request.getRemoteAddr()
-		String result=NotifyService.getMessage(token,sessionId,ip)
+		String btle=params.btle
+		String result=NotifyService.getMessage(token,sessionId,ip,btle)
 		if (result!=null) {
 			render(text:result)
 		} else {
@@ -44,6 +45,7 @@ class ApiController {
 		response.setHeader("Content-Disposition","attachment; notify.mp3")
 		//response.outputStream.flush()
 		String ip=request.getRemoteAddr()
-		NotifyService.getAudio(token,session.getId(),ip,response.outputStream)
+		String btle=params.btle
+		NotifyService.getAudio(token,session.getId(),ip,response.outputStream,btle)
 	}
 }
