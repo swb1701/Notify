@@ -79,7 +79,6 @@ class NotifyService {
 				}
 			}
 		}
-
 	}
 
 	String maskKey(String key) {
@@ -92,8 +91,38 @@ class NotifyService {
 	//a map from aws queue name to readers to track the queue readers
 	ConcurrentHashMap<String,QueueReader> readerMap=new ConcurrentHashMap<String,QueueReader>()
 	
+	static ConcurrentHashMap<String,Map> btMap=new ConcurrentHashMap<String,Map>()
+	
 	def cleanupThreads() {
 		relayMessage(null,null)
+	}
+	
+	synchronized updateBluetooth(String sessionId,String ip,String data) {
+		try {
+			def jsonSlurper=new JsonSlurper()
+			def json=jsonSlurper.parseText(data)
+			json.each {
+				def olist=btMap[it.addr]
+				if (olist==null) {
+					Map map0=[ip:ip,key:sessionId,rssi:it.rssi,time:it.time]
+					ConcurrentHashMap map=new ConcurrentHashMap(map0)
+					olist=[map]
+					btMap[it.addr]=olist
+				} else {
+					Map map=olist.find{it.key==sessionId && it.ip==ip}
+					if (map==null) {
+						map=[ip:ip,key:sessionId,rssi:it.rssi,time:it.time]
+						olist<<new ConcurrentHashMap(map)
+					} else {
+						map.rssi=it.rssi
+						map.time=it.time
+					}
+					//candidate for arriving event if previous time greater than threshold
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 	}
 
 	synchronized relayMessage(String awsQueue,String message) { //since we may have lots of queues, let's synchronized this so we don't conflict during cleanup
@@ -134,7 +163,10 @@ class NotifyService {
 	 * Get a message using a given token and session id
 	 */
 	String getMessage(String tokstr,String sessionId,String ip,String btle=null) {
-		if (btle!=null) println("sessionId=${sessionId} ip=${ip} btle=${btle}")
+		if (btle!=null) {
+			println("sessionId=${sessionId} ip=${ip} btle=${btle}")
+			updateBluetooth(sessionId,ip,btle)
+		}
 		Token token=Token.findByName(tokstr)
 		if (token==null) {
 			return(/{"cmd":"speak","text":"Sorry, access denied"}/)
