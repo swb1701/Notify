@@ -16,9 +16,9 @@
 	<g:each in="${btMap[key].sort{it.addr}}" var="map">
 	<tr>
 	<td>${nameMap[key]}</td>
-	<td>${map.addr}</td>
-	<td>${map.key}</td>
-	<td>${map.ip}</td>
+	<td>${key}</td>
+	<td>${nameMap[map.key]} (${map.key})</td>
+	<td>${nameMap[map.ip]} (${map.ip})</td>
 	<td>${map.rssi}</td>
 	<td>${millis-map.time}</td>		
 	</tr>
