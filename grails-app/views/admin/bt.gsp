@@ -13,7 +13,7 @@
 	</tr>
 	<g:set var="millis" value="${System.currentTimeMillis()}"></g:set>
 	<g:each in="${btMap.keySet().sort()}" var="key">
-	<g:each in="${btMap[key]}.sort{it.addr}" var="map">
+	<g:each in="${btMap[key].sort{it.addr}}" var="map">
 	<tr>
 	<td>${nameMap[key]}</td>
 	<td>${btMap[key].addr}</td>
