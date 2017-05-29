@@ -11,7 +11,7 @@
 	<tr>
 	<th>Tag</th><th>Address</th><th>Key</th><th>IP</th><th>RSSI</th><th>Time</th>
 	</tr>
-	<g:set var="millis" value="${System.currentTimeMillis()}">
+	<g:set var="millis" value="${System.currentTimeMillis()}"></g:set>
 	<g:each in="${btMap.keySet().sort()}" var="key">
 	<g:each in="${btMap[key]}.sort{it.addr}" var="map">
 	<tr>
