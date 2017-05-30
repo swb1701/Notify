@@ -50,7 +50,7 @@
 							Admin Actions<i class="icon dropdown"></i>
 							<div class="menu">
 							   <a class="item" href="/admin/bt">Bluetooth Status (By Device)</a>
-							   <a class="item" href="/admin/bt">Bluetooth Status (By Recency)</a>
+							   <a class="item" href="/admin/bt2">Bluetooth Status (By Recency)</a>
 								<g:link class="item" controller="user">Edit Users</g:link>
 							   <a class="item" href="/controllers">Internal Controllers</a>
 							</div>

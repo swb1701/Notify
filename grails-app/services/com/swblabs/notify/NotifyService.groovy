@@ -118,14 +118,14 @@ class NotifyService {
 			json.each {
 				def olist=btMap[it.addr]
 				if (olist==null) {
-					Map map0=[ip:ip,key:sessionId,rssi:it.rssi,time:it.time]
+					Map map0=[ip:ip,key:sessionId,rssi:it.rssi,time:it.time,addr:it.addr]
 					ConcurrentHashMap map=new ConcurrentHashMap(map0)
 					olist=[map]
 					btMap[it.addr]=olist
 				} else {
 					Map map=olist.find{it.key==sessionId && it.ip==ip}
 					if (map==null) {
-						map=[ip:ip,key:sessionId,rssi:it.rssi,time:it.time]
+						map=[ip:ip,key:sessionId,rssi:it.rssi,time:it.time,addr:it.addr]
 						olist<<new ConcurrentHashMap(map)
 					} else {
 						map.rssi=it.rssi
