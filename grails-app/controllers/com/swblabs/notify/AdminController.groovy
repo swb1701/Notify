@@ -14,4 +14,12 @@ class AdminController {
 		}
 		[btMap:NotifyService.btMap,nameMap:nameMap]
 	}
+	
+    def bt2() {
+		Map nameMap=[:]
+		Address.all.each { add ->
+			nameMap[add.address]=add.name
+		}
+		[btlist:NotifyService.btMap.values().flatten(),nameMap:nameMap]
+	}
 }
