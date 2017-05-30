@@ -33,8 +33,8 @@
 	<g:if test="${nameMap[key]==null}">
 	<tr>
 	<g:if test="${j==0}">
-	<td rowspan="${btMap[key].size()}">${nameMap[key]}</td>
-	<td rowspan="${btMap[key].size()}">${key}</td>
+	<td class="top aligned" rowspan="${btMap[key].size()}">${nameMap[key]}</td>
+	<td class="top aligned" rowspan="${btMap[key].size()}">${key}</td>
 	</g:if>
 	<td>${nameMap[map.key]} (${map.key})</td>
 	<td>${nameMap[map.ip]} (${map.ip})</td>
