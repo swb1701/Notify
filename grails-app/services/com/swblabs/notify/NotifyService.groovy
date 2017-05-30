@@ -1,6 +1,7 @@
 package com.swblabs.notify
 
 import grails.transaction.Transactional
+import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovyx.net.http.HTTPBuilder
 
@@ -26,6 +27,7 @@ class NotifyService {
 	def grailsApplication
 	static Object lock=new Object();
 	static Map keyToIP=[:]
+	static File dataFile=null
 
 	class Client {
 		String awsQueue
@@ -97,10 +99,22 @@ class NotifyService {
 		relayMessage(null,null)
 	}
 	
+	def logData(String line) {
+		if (dataFile==null) {
+			dataFile=new File("btlog.json")
+		}
+		dataFile<<line<<'\n'
+	}
+	
 	synchronized updateBluetooth(String sessionId,String ip,String data) {
 		try {
 			def jsonSlurper=new JsonSlurper()
 			def json=jsonSlurper.parseText(data)
+			try {
+				logData(JsonOutput.toJson([key:sessionId,ip:ip,data:json]))
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
 			json.each {
 				def olist=btMap[it.addr]
 				if (olist==null) {
