@@ -6,6 +6,7 @@ import grails.plugin.springsecurity.annotation.Secured
 class AdminController {
 	
 	def NotifyService
+	def BoardBotService
 
     def bt() {
 		Map nameMap=[:]
@@ -21,5 +22,10 @@ class AdminController {
 			nameMap[add.address]=add.name
 		}
 		[btlist:NotifyService.btMap.values().flatten(),nameMap:nameMap]
+	}
+	
+	def bbtest() {
+		BoardBotService.receiver()
+		render(text:"OK")	
 	}
 }
