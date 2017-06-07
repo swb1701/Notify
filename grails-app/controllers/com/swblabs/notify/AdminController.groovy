@@ -1,5 +1,6 @@
 package com.swblabs.notify
 
+import grails.converters.JSON
 import grails.plugin.springsecurity.annotation.Secured
 
 @Secured(["ROLE_ADMIN"])
@@ -24,8 +25,13 @@ class AdminController {
 		[btlist:NotifyService.btMap.values().flatten(),nameMap:nameMap]
 	}
 	
+	def bbdemo() {
+	}
+	
 	def bbtest() {
-		BoardBotService.receiver()
-		render(text:"OK")	
+		def blocks=BoardBotService.receiver()
+		println("returning:"+blocks)
+		def map=[blocks:blocks]
+		render(map as JSON)
 	}
 }
