@@ -28,10 +28,24 @@ class AdminController {
 	def bbdemo() {
 	}
 	
+	def test() {
+		BoardBotService.test()
+		render(text:"OK")
+	}
+	
 	def bbtest() {
 		def blocks=BoardBotService.receiver()
 		println("returning:"+blocks)
 		def map=[blocks:blocks]
 		render(map as JSON)
+	}
+	
+	def bbPoll(String mac) {
+		int ack=-1
+		if (params.ack!=null) {
+			ack=Integer.parseInt(params.ack)
+		}
+		def result=BoardBotService.poll(mac,ack)
+		response.outputStream.withStream { it << result }
 	}
 }
