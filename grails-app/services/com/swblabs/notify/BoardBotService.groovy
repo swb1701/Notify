@@ -44,7 +44,7 @@ class BoardBotService {
 						return(last)
 					}
 				}
-				def result=blockQueue.poll(60,TimeUnit.SECONDS) //60 second long poll
+				def result=blockQueue.poll(30,TimeUnit.SECONDS) //30 second long poll
 				if (result==null) { //if nothing
 					last=null //clear last
 					return("OK") //return OK to begin next poll cycle
