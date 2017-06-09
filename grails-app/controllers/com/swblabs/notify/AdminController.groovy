@@ -33,17 +33,23 @@ class AdminController {
 		render(text:"OK")
 	}
 	
-	def bbtest() {
-		def blocks=BoardBotService.receiver()
+	def clear() {
+		BoardBotService.clear()
+		render(text:"OK")
+	}
+
+	def bbtest(int ext) {
+		def blocks=BoardBotService.receiver(ext)
 		println("returning:"+blocks)
 		def map=[blocks:blocks]
 		render(map as JSON)
 	}
 	
-	def bbPoll(String mac) {
+	def bbPoll() {
+		String mac=params.ID_IWBB
 		int ack=-1
-		if (params.ack!=null) {
-			ack=Integer.parseInt(params.ack)
+		if (params.NUM!=null) {
+			ack=Integer.parseInt(params.NUM)
 		}
 		def result=BoardBotService.poll(mac,ack)
 		response.outputStream.withStream { it << result }

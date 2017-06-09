@@ -6,12 +6,33 @@
 <title>BBDemo</title>
 </head>
 <body>
+<div class="ui buttons" style="margin-bottom:10px;">
+	<button id="ext" class="ui button">External</button>
+	<div class="or"></div>
+	<button id="int" class="ui button">Internal</button>
+	<div class="or"></div>
+	<button id="proxy" class="ui button">Both</button>
+</div>
+<div id="expl" style="margin-bottom:10px;"><i>Feed from internal content</i></div>
 <canvas class="float:left;" id="bbcanvas" width="1440"  height="480" style="border:1px solid #000000;">
 </canvas>
 <script>
+var ext=0;
+$('#ext').click(function() {
+	$('#expl').html("<i>Feed from external content</i>")
+	ext=1;	
+});
+$('#int').click(function() {
+	$('#expl').html("<i>Feed from internal content</i>")
+	ext=0;	
+});
+$('#proxy').click(function() {
+	$('#expl').html("<i>Feed from internal content and external content</i>")
+	ext=0;	
+});
 function poll() {
 	setTimeout(function() {
-		$.ajax({url: "/admin/bbtest", success: function(json) {
+		$.ajax({url: "/admin/bbtest?ext="+ext, success: function(json) {
 			var c=document.getElementById("bbcanvas");
 			var ctx=c.getContext("2d");
 			if (json.blocks.length>0) {

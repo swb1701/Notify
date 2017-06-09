@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 @Transactional
 class BoardBotService {
 
-	String pollURL="http://ibb.jjrobots.com/ibbsvr/ibb.php"
+	String[] pollURLs=["http://localhost:8080/admin/bbPoll","http://ibb.jjrobots.com/ibbsvr/ibb.php"]
 	Map botHandlerMap=[:]
 
 	class BotHandler {
@@ -70,6 +70,7 @@ class BoardBotService {
 	}
 	
 	def poll(String mac,int ack) {
+		println("Polling mac=${mac} ack=${ack}")
 		BotHandler bh=getBotHandler(mac)
 		bh.poll(ack)
 	}
@@ -81,25 +82,30 @@ class BoardBotService {
 
 	def test() {
 		BoardBot bb=BoardBot.first()
+		sendBlock(bb.mac,testBoard[0])
+	}
+	
+	def clear() {
+		BoardBot bb=BoardBot.first()
 		sendBlock(bb.mac,clearBoard[0])
 	}
 
-	def receiver() { //test receiver on first board bot
+	def receiver(int ext) { //test receiver on first board bot
 		BoardBot bb=BoardBot.first()
-		def blocks=receiver(bb.mac)
+		def blocks=receiver(bb.mac,ext)
 		return(blocks)
 	}
 
 	//examples of raw block sequences for decoding practice
 	def clearBoard=[[4009,4001,4009,11,4001,4001,4003,0,1,1,10,10,4005,0,3580,10,3580,120,10,120,10,230,3580,230,3580,340,10,340,10,450,3580,450,3580,560,10,560,10,670,3580,670,3580,780,10,780,10,890,3580,890,3580,1000,10,1000,10,1110,3580,1110,3580,1000,10,1000,10,890,3580,890,3580,780,10,780,10,670,3580,670,3580,560,10,560,10,450,3580,450,3580,340,10,340,10,230,3580,230,3580,120,10,120,10,10,3580,10,3580,0,10,0,10,0,4003,0,1,1,4002,4002]]
-
+	def testBoard=[[4009, 4001, 4009, 56, 4001, 4001, 4003, 0, 1, 1, 4003, 0, 1395, 450, 4004, 0, 1395, 712, 1295, 712, 1295, 748, 1534, 748, 1534, 712, 1434, 712, 1434, 450, 1395, 450, 1395, 450, 4003, 0, 4003, 0, 1592, 450, 4004, 0, 1592, 748, 1778, 748, 1778, 712, 1631, 712, 1631, 631, 1768, 631, 1768, 596, 1631, 596, 1631, 485, 1778, 485, 1778, 450, 1592, 450, 1592, 450, 4003, 0, 4003, 0, 1918, 445, 4004, 0, 1903, 445, 1888, 447, 1875, 449, 1863, 451, 1841, 459, 1821, 468, 1821, 518, 1824, 518, 1834, 509, 1844, 501, 1856, 495, 1868, 489, 1880, 485, 1892, 481, 1904, 480, 1916, 479, 1931, 480, 1944, 482, 1956, 487, 1965, 493, 1972, 500, 1978, 508, 1981, 518, 1982, 529, 1981, 537, 1980, 545, 1977, 552, 1973, 558, 1968, 563, 1962, 567, 1954, 571, 1945, 574, 1920, 581, 1891, 588, 1877, 592, 1864, 598, 1852, 605, 1842, 614, 1834, 625, 1828, 637, 1824, 652, 1823, 668, 1823, 677, 1825, 685, 1827, 693, 1830, 701, 1834, 708, 1839, 715, 1845, 722, 1851, 728, 1858, 734, 1866, 739, 1874, 743, 1883, 747, 1892, 749, 1902, 751, 1912, 753, 1923, 753, 1947, 752, 1970, 748, 1992, 742, 2011, 734, 2011, 686, 2008, 686, 2001, 693, 1992, 699, 1983, 704, 1972, 709, 1961, 713, 1949, 716, 1938, 718, 1926, 719, 1912, 718, 1901, 716, 1890, 712, 1881, 706, 1874, 699, 1868, 691, 1865, 682, 1864, 672, 1865, 663, 1867, 655, 1870, 648, 1874, 642, 1880, 637, 1886, 632, 1894, 629, 1903, 626, 1934, 618, 1964, 610, 1978, 605, 1991, 598, 2001, 591, 2009, 582, 2015, 572, 2019, 560, 2022, 548, 2023, 535, 2023, 526, 2021, 518, 2019, 509, 2016, 501, 2012, 492, 2007, 485, 2002, 478, 1996, 472, 1989, 466, 1981, 460, 1972, 456, 1964, 452, 1954, 449, 1943, 447, 1931, 446, 1918, 445, 1918, 445, 4003, 0, 4003, 0, 2151, 450, 4004, 0, 2151, 712, 2051, 712, 2051, 748, 2290, 748, 2290, 712, 2190, 712, 2190, 450, 2151, 450, 2151, 450, 4003, 0, 4003, 0, 1, 1, 4002, 4002]]
 	static Map blockNumberMap=[:]
 
 	/*
 	 * Receive the next drawing for the bot as a list of blocks (or empty if a reset is sent).  We
 	 * might retransmit the set (possibly altering sequence numbers).
 	 */
-	def receiver(String mac) {
+	def receiver(String mac,int ext) {
 		//return(clearBoard)
 		def blockNumber=blockNumberMap[mac]
 		if (blockNumber==null) {
@@ -107,14 +113,14 @@ class BoardBotService {
 		}
 		def blocks=[]
 		while(true) {
-			String url=pollURL+"?ID_IWBB="+mac
+			String url=pollURLs[ext]+"?ID_IWBB="+mac
 			if (blockNumber==-1) {
 				url+="&STATUS=READY"
 			} else {
 				url+="&STATUS=ACK&NUM="+blockNumber
 			}
 			def data=new URL(url).getBytes()
-			//println("size="+data.size())
+			println("size="+data.size())
 			if (data.size()>6) {
 				def block=[]
 				for(int i=0;i<data.size();i=i+3) {

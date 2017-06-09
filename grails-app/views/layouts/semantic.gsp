@@ -49,6 +49,7 @@
 							<i class="icon setting"></i>
 							Admin Actions<i class="icon dropdown"></i>
 							<div class="menu">
+							   <a class="item" href="/admin/bbdemo">BoardBot Simulator</a>
 							   <a class="item" href="/admin/bt">Bluetooth Status (By Device)</a>
 							   <a class="item" href="/admin/bt2">Bluetooth Status (By Recency)</a>
 								<g:link class="item" controller="user">Edit Users</g:link>
