@@ -37,6 +37,11 @@ class AdminController {
 		BoardBotService.clear()
 		render(text:"OK")
 	}
+	
+	def plot(String text) {
+		BoardBotService.plotText(text)
+		render(text:"OK")
+	}
 
 	def bbtest(int ext) {
 		def blocks=BoardBotService.receiver(ext)

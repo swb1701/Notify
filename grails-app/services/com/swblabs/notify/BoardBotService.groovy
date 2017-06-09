@@ -2,6 +2,15 @@ package com.swblabs.notify
 
 import grails.transaction.Transactional
 
+import java.awt.Font
+import java.awt.Graphics2D
+import java.awt.Rectangle
+import java.awt.RenderingHints
+import java.awt.Shape
+import java.awt.font.FontRenderContext
+import java.awt.font.TextLayout
+import java.awt.geom.PathIterator
+import java.awt.image.BufferedImage
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
@@ -88,6 +97,35 @@ class BoardBotService {
 	def clear() {
 		BoardBot bb=BoardBot.first()
 		sendBlock(bb.mac,clearBoard[0])
+	}
+	
+	def plotText(String text) {
+		BufferedImage img=new BufferedImage(300,100,BufferedImage.TYPE_INT_ARGB)
+		Graphics2D g2=img.createGraphics()
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+			RenderingHints.VALUE_ANTIALIAS_ON)
+		g2.setRenderingHint(RenderingHints.KEY_RENDERING,
+			RenderingHints.VALUE_RENDER_QUALITY)
+		FontRenderContext frc = g2.getFontRenderContext()
+		Font font = new Font("Helvetica", 1, 60) //parm font later
+		TextLayout tl= new TextLayout(text, font, frc)
+		Shape outline = tl.getOutline(null)
+		Rectangle rect = outline.getBounds()
+		println(rect)
+		PathIterator path=outline.getPathIterator(null,1)
+		float[] pt=new float[2]
+		while(!path.isDone()) {
+			int type=path.currentSegment(pt)
+			if (type==PathIterator.SEG_CLOSE) {
+			  println("close")
+			} else if (type==PathIterator.SEG_LINETO) {
+			  println("lineto")
+			} else if (type==PathIterator.SEG_MOVETO) {
+			  println("moveto")
+			}			
+			println("pt="+pt)
+			path.next()
+		}
 	}
 
 	def receiver(int ext) { //test receiver on first board bot
