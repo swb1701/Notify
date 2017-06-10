@@ -11,6 +11,7 @@ import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
 import java.awt.geom.PathIterator
 import java.awt.image.BufferedImage
+import java.text.SimpleDateFormat
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
@@ -88,10 +89,24 @@ class BoardBotService {
 		BotHandler bh=getBotHandler(mac)
 		bh.sendBlock(cmds)
 	}
+	
+	def sendBlock(cmds) {
+		BoardBot bb=BoardBot.first()
+		BotHandler bh=getBotHandler(bb.mac)
+		bh.sendBlock(cmds)
+	}
 
 	def test() {
 		BoardBot bb=BoardBot.first()
-		sendBlock(bb.mac,testBoard[0])
+		//sendBlock(bb.mac,testBoard[0])
+		SimpleDateFormat sdf=new SimpleDateFormat("HH:mm")
+		String last=""
+		while(true) {
+			String next=sdf.format(new Date())
+			if (next!=last) plotText(next)
+			last=next
+			Thread.sleep(5000)
+		}
 	}
 	
 	def clear() {
@@ -100,32 +115,67 @@ class BoardBotService {
 	}
 	
 	def plotText(String text) {
-		BufferedImage img=new BufferedImage(300,100,BufferedImage.TYPE_INT_ARGB)
+		BufferedImage img=new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB) //any other way to get a g2d?
 		Graphics2D g2=img.createGraphics()
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 			RenderingHints.VALUE_ANTIALIAS_ON)
 		g2.setRenderingHint(RenderingHints.KEY_RENDERING,
 			RenderingHints.VALUE_RENDER_QUALITY)
 		FontRenderContext frc = g2.getFontRenderContext()
-		Font font = new Font("Helvetica", 1, 60) //parm font later
+		Font font = new Font("Helvetica", 1, 120) //parm font later
 		TextLayout tl= new TextLayout(text, font, frc)
 		Shape outline = tl.getOutline(null)
 		Rectangle rect = outline.getBounds()
-		println(rect)
-		PathIterator path=outline.getPathIterator(null,1)
+		//println(rect)
+		int bw=3600 //board width
+		int bh=1200 //board height
+		int tmargin=200 //minimum margin around text
+		double sx=(bw-2*tmargin)/rect.width //scale if based on x
+		double sy=(bh-2*tmargin)/rect.height //scale if based on y
+		double scale=sx
+		if (sy<sx) scale=sy
+		int xmargin=(bw-scale*rect.width)/2
+		int ymargin=(bh-scale*rect.height)/2
+		//println("xmargin="+xmargin)
+		//println("ymargin="+ymargin)
+		double tx=-1*rect.x
+		double ty=-1*rect.y
+		def block=[4009,4001,4009,0,4001,4001,4003,4003]
+		/*
+		//uncomment to show bounding box
+		block.addAll([(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y))])
+		block.addAll([4004,4004,(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y+rect.height))])
+		block.addAll([(int)(xmargin+scale*(tx+rect.x+rect.width)),(int)(bh-ymargin-scale*(ty+rect.y+rect.height))])
+		block.addAll([(int)(xmargin+scale*(tx+rect.x+rect.width)),(int)(bh-ymargin-scale*(ty+rect.y))])
+		block.addAll([(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y))])
+		*/
+		PathIterator path=outline.getPathIterator(null,0.25)
 		float[] pt=new float[2]
+		boolean up=true
 		while(!path.isDone()) {
 			int type=path.currentSegment(pt)
 			if (type==PathIterator.SEG_CLOSE) {
-			  println("close")
+			  block.addAll([4003,4003,0,0,4002,4002])
+			  //println("close")
 			} else if (type==PathIterator.SEG_LINETO) {
-			  println("lineto")
+			  if (up) {
+				  block.addAll([4004,4004])
+				  up=false
+			  }
+			  block.addAll([(int)(xmargin+scale*(tx+pt[0])),(int)(bh-ymargin-scale*(ty+pt[1]))])
+			  //println("lineto")
 			} else if (type==PathIterator.SEG_MOVETO) {
-			  println("moveto")
+			  if (!up) {
+				  block.addAll([4003,4003])
+				  up=true
+			  }
+			  block.addAll([(int)(xmargin+scale*(tx+pt[0])),(int)(bh-ymargin-scale*(ty+pt[1]))])
+			  //println("moveto")
 			}			
-			println("pt="+pt)
+			//println("pt="+pt)
 			path.next()
 		}
+		sendBlock(block)
 	}
 
 	def receiver(int ext) { //test receiver on first board bot
