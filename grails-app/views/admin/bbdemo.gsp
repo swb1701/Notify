@@ -28,7 +28,7 @@ $('#int').click(function() {
 });
 $('#proxy').click(function() {
 	$('#expl').html("<i>Feed from internal content and external content</i>")
-	ext=0;	
+	ext=3
 });
 function poll() {
 	setTimeout(function() {

@@ -18,8 +18,37 @@ import java.util.concurrent.TimeUnit
 @Transactional
 class BoardBotService {
 
-	String[] pollURLs=["http://localhost:8080/admin/bbPoll","http://ibb.jjrobots.com/ibbsvr/ibb.php"]
+	String[] pollURLs=["http://localhost:8080/admin/bbPoll", "http://ibb.jjrobots.com/ibbsvr/ibb.php"]
+	Map proxyMap=[:]
 	Map botHandlerMap=[:]
+
+	class Proxy { //proxy traffic from iboardbot's server to ours if desired
+
+		boolean running=true
+		String mac
+
+		public Proxy(String mac) {
+			this.mac=mac
+			start()
+		}
+
+		def stop() {
+			running=false //will stop on next poll
+		}
+
+		def start() {
+			Thread.start {
+				while(running) {
+					println("Polling external iboardbot server")
+					def blocks=receiver(mac,1) //get full response from iboardbot server
+					if (blocks.size()>0) {
+						sendBlocks(mac,blocks)
+					}
+				}
+			}
+		}
+
+	}
 
 	class BotHandler {
 		String errCode=null //if set transmit error code on next poll
@@ -65,11 +94,11 @@ class BoardBotService {
 			}
 		}
 	}
-	
+
 	def poll(String mac) {
 		poll(mac,-1)
 	}
-	
+
 	synchronized getBotHandler(String mac) {
 		BotHandler bh=botHandlerMap[mac]
 		if (bh==null) {
@@ -78,22 +107,33 @@ class BoardBotService {
 		}
 		return(bh)
 	}
-	
+
 	def poll(String mac,int ack) {
 		println("Polling mac=${mac} ack=${ack}")
 		BotHandler bh=getBotHandler(mac)
 		bh.poll(ack)
 	}
 	
+	def sendBlocks(String mac,blocks) {
+		BotHandler bh=getBotHandler(mac)
+		synchronized(bh) {
+			blocks.each { block ->
+				bh.sendBlock(block)
+			}
+		}
+
+	}
+
 	def sendBlock(String mac,cmds) {
 		BotHandler bh=getBotHandler(mac)
-		bh.sendBlock(cmds)
+		synchronized(bh) {
+			bh.sendBlock(cmds)
+		}
 	}
-	
+
 	def sendBlock(cmds) {
 		BoardBot bb=BoardBot.first()
-		BotHandler bh=getBotHandler(bb.mac)
-		bh.sendBlock(cmds)
+		sendBlock(bb.mac,cmds)
 	}
 
 	def test() {
@@ -108,19 +148,19 @@ class BoardBotService {
 			Thread.sleep(5000)
 		}
 	}
-	
+
 	def clear() {
 		BoardBot bb=BoardBot.first()
 		sendBlock(bb.mac,clearBoard[0])
 	}
-	
+
 	def plotText(String text) {
 		BufferedImage img=new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB) //any other way to get a g2d?
 		Graphics2D g2=img.createGraphics()
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-			RenderingHints.VALUE_ANTIALIAS_ON)
+				RenderingHints.VALUE_ANTIALIAS_ON)
 		g2.setRenderingHint(RenderingHints.KEY_RENDERING,
-			RenderingHints.VALUE_RENDER_QUALITY)
+				RenderingHints.VALUE_RENDER_QUALITY)
 		FontRenderContext frc = g2.getFontRenderContext()
 		Font font = new Font("Helvetica", 1, 120) //parm font later
 		TextLayout tl= new TextLayout(text, font, frc)
@@ -140,38 +180,38 @@ class BoardBotService {
 		//println("ymargin="+ymargin)
 		double tx=-1*rect.x
 		double ty=-1*rect.y
-		def block=[4009,4001,4009,0,4001,4001,4003,4003]
+		def block=[4009, 4001, 4009, 0, 4001, 4001, 4003, 4003]
 		/*
-		//uncomment to show bounding box
-		block.addAll([(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y))])
-		block.addAll([4004,4004,(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y+rect.height))])
-		block.addAll([(int)(xmargin+scale*(tx+rect.x+rect.width)),(int)(bh-ymargin-scale*(ty+rect.y+rect.height))])
-		block.addAll([(int)(xmargin+scale*(tx+rect.x+rect.width)),(int)(bh-ymargin-scale*(ty+rect.y))])
-		block.addAll([(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y))])
-		*/
+		 //uncomment to show bounding box
+		 block.addAll([(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y))])
+		 block.addAll([4004,4004,(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y+rect.height))])
+		 block.addAll([(int)(xmargin+scale*(tx+rect.x+rect.width)),(int)(bh-ymargin-scale*(ty+rect.y+rect.height))])
+		 block.addAll([(int)(xmargin+scale*(tx+rect.x+rect.width)),(int)(bh-ymargin-scale*(ty+rect.y))])
+		 block.addAll([(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y))])
+		 */
 		PathIterator path=outline.getPathIterator(null,0.25)
 		float[] pt=new float[2]
 		boolean up=true
 		while(!path.isDone()) {
 			int type=path.currentSegment(pt)
 			if (type==PathIterator.SEG_CLOSE) {
-			  block.addAll([4003,4003,0,0,4002,4002])
-			  //println("close")
+				block.addAll([4003, 4003, 0, 0, 4002, 4002])
+				//println("close")
 			} else if (type==PathIterator.SEG_LINETO) {
-			  if (up) {
-				  block.addAll([4004,4004])
-				  up=false
-			  }
-			  block.addAll([(int)(xmargin+scale*(tx+pt[0])),(int)(bh-ymargin-scale*(ty+pt[1]))])
-			  //println("lineto")
+				if (up) {
+					block.addAll([4004, 4004])
+					up=false
+				}
+				block.addAll([(int)(xmargin+scale*(tx+pt[0])), (int)(bh-ymargin-scale*(ty+pt[1]))])
+				//println("lineto")
 			} else if (type==PathIterator.SEG_MOVETO) {
-			  if (!up) {
-				  block.addAll([4003,4003])
-				  up=true
-			  }
-			  block.addAll([(int)(xmargin+scale*(tx+pt[0])),(int)(bh-ymargin-scale*(ty+pt[1]))])
-			  //println("moveto")
-			}			
+				if (!up) {
+					block.addAll([4003, 4003])
+					up=true
+				}
+				block.addAll([(int)(xmargin+scale*(tx+pt[0])), (int)(bh-ymargin-scale*(ty+pt[1]))])
+				//println("moveto")
+			}
 			//println("pt="+pt)
 			path.next()
 		}
@@ -182,6 +222,17 @@ class BoardBotService {
 		BoardBot bb=BoardBot.first()
 		def blocks=receiver(bb.mac,ext)
 		return(blocks)
+	}
+
+	def setProxy(String mac,boolean on) { //turn proxy on/off
+		Proxy proxy=proxyMap[mac]
+		if (proxy!=null && !on) { //shut down
+			proxy.stop()
+			proxyMap.remove(mac)
+		} else if (proxy==null && on) { //start
+			proxy=new Proxy(mac)
+			proxyMap[mac]=proxy
+		}
 	}
 
 	//examples of raw block sequences for decoding practice
@@ -195,7 +246,13 @@ class BoardBotService {
 	 */
 	def receiver(String mac,int ext) {
 		//return(clearBoard)
-		def blockNumber=blockNumberMap[mac]
+		if (ext==3) {
+			ext=0
+			setProxy(mac,true)
+		} else {
+			setProxy(mac,false)
+		}
+		def blockNumber=blockNumberMap[ext+">"+mac]
 		if (blockNumber==null) {
 			blockNumber=-1
 		}
@@ -224,14 +281,14 @@ class BoardBotService {
 				}
 				int size=block.size()
 				if (block[size-2]==4002 && block[size-1]==4002) {  //watches for end of draw so web page can clear and draw at once
-					blockNumberMap[mac]=blockNumber				   //could relax this to simulate interactive plotting of blocks
+					blockNumberMap[ext+">"+mac]=blockNumber				   //could relax this to simulate interactive plotting of blocks
 					return(blocks) //end of drawing return set of blocks
 				}
 			} else {
 				//ER=reset, OK=ok
 				String resp=new String(data)
 				print(resp)
-				blockNumberMap[mac]=-1
+				blockNumberMap[ext+">"+mac]=-1
 				if (resp=="ER") return([])
 				if (resp=="OK") return(blocks)
 			}
