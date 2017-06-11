@@ -13,21 +13,21 @@
 	<div class="or"></div>
 	<button id="proxy" class="ui button">Both</button>
 </div>
-<div id="expl" style="margin-bottom:10px;"><i>Feed from internal content</i></div>
+<div id="expl" style="margin-bottom:10px;"><i>Feed from INTERNAL content</i></div>
 <canvas class="float:left;" id="bbcanvas" width="1440"  height="480" style="border:1px solid #000000;">
 </canvas>
 <script>
 var ext=0;
 $('#ext').click(function() {
-	$('#expl').html("<i>Feed from external content</i>")
+	$('#expl').html("<i>Feed from EXTERNAL content</i>")
 	ext=1;	
 });
 $('#int').click(function() {
-	$('#expl').html("<i>Feed from internal content</i>")
+	$('#expl').html("<i>Feed from INTERNAL content</i>")
 	ext=0;	
 });
 $('#proxy').click(function() {
-	$('#expl').html("<i>Feed from internal content and external content</i>")
+	$('#expl').html("<i>Feed from INTERNAL AND EXTERNAL content</i>")
 	ext=3
 });
 function poll() {

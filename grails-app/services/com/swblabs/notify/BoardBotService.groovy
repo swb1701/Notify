@@ -139,10 +139,11 @@ class BoardBotService {
 	def test() {
 		BoardBot bb=BoardBot.first()
 		//sendBlock(bb.mac,testBoard[0])
-		SimpleDateFormat sdf=new SimpleDateFormat("HH:mm")
+		SimpleDateFormat sdf=new SimpleDateFormat("h:mm")
 		String last=""
 		while(true) {
 			String next=sdf.format(new Date())
+			//if (next!=last) plotText(next,new Rectangle(0,1000,600,200),20)
 			if (next!=last) plotText(next)
 			last=next
 			Thread.sleep(5000)
@@ -153,8 +154,22 @@ class BoardBotService {
 		BoardBot bb=BoardBot.first()
 		sendBlock(bb.mac,clearBoard[0])
 	}
-
+	
 	def plotText(String text) {
+		plotText(text,new Rectangle(0,0,3600,1200))
+	}
+
+	def plotText(String text,Rectangle bounds,int tmargin=200) {
+		int bx=0
+		int by=0
+		int bw=3600 //board width
+		int bh=1200 //board height
+		if (bounds!=null) {
+			bx=bounds.x
+			by=bounds.y
+			bw=bounds.width
+			bh=bounds.height
+		}
 		BufferedImage img=new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB) //any other way to get a g2d?
 		Graphics2D g2=img.createGraphics()
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
@@ -166,53 +181,48 @@ class BoardBotService {
 		TextLayout tl= new TextLayout(text, font, frc)
 		Shape outline = tl.getOutline(null)
 		Rectangle rect = outline.getBounds()
-		//println(rect)
-		int bw=3600 //board width
-		int bh=1200 //board height
-		int tmargin=200 //minimum margin around text
+		println(rect)
 		double sx=(bw-2*tmargin)/rect.width //scale if based on x
 		double sy=(bh-2*tmargin)/rect.height //scale if based on y
 		double scale=sx
 		if (sy<sx) scale=sy
 		int xmargin=(bw-scale*rect.width)/2
 		int ymargin=(bh-scale*rect.height)/2
-		//println("xmargin="+xmargin)
-		//println("ymargin="+ymargin)
 		double tx=-1*rect.x
 		double ty=-1*rect.y
 		def block=[4009, 4001, 4009, 0, 4001, 4001, 4003, 4003]
+		def xscale={x->(int)(bx+xmargin+scale*(tx+x))}
+		def yscale={y->(int)(by+bh-ymargin-scale*(ty+y))}
+		boolean up=true
 		/*
-		 //uncomment to show bounding box
-		 block.addAll([(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y))])
-		 block.addAll([4004,4004,(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y+rect.height))])
-		 block.addAll([(int)(xmargin+scale*(tx+rect.x+rect.width)),(int)(bh-ymargin-scale*(ty+rect.y+rect.height))])
-		 block.addAll([(int)(xmargin+scale*(tx+rect.x+rect.width)),(int)(bh-ymargin-scale*(ty+rect.y))])
-		 block.addAll([(int)(xmargin+scale*(tx+rect.x)),(int)(bh-ymargin-scale*(ty+rect.y))])
-		 */
+		 //uncomment to show bounding boxes
+		 block.addAll([bx,by,4004,4004,bx,by+bh,bx+bw,by+bh,bx+bw,by,bx,by,4003,4003]) //target sub-region (or whole board)
+		 block.addAll([xscale(rect.x),yscale(rect.y)])
+		 block.addAll([4004,4004,xscale(rect.x),yscale(rect.y+rect.height)])
+		 block.addAll([xscale(rect.x+rect.width),yscale(rect.y+rect.height)])
+		 block.addAll([xscale(rect.x+rect.width),yscale(rect.y)])
+		 block.addAll([xscale(rect.x),yscale(rect.y)])
+		 up=false
+		*/
 		PathIterator path=outline.getPathIterator(null,0.25)
 		float[] pt=new float[2]
-		boolean up=true
 		while(!path.isDone()) {
 			int type=path.currentSegment(pt)
 			if (type==PathIterator.SEG_CLOSE) {
 				block.addAll([4003, 4003, 0, 0, 4002, 4002])
-				//println("close")
 			} else if (type==PathIterator.SEG_LINETO) {
 				if (up) {
 					block.addAll([4004, 4004])
 					up=false
 				}
-				block.addAll([(int)(xmargin+scale*(tx+pt[0])), (int)(bh-ymargin-scale*(ty+pt[1]))])
-				//println("lineto")
+				block.addAll([xscale(pt[0]),yscale(pt[1])])
 			} else if (type==PathIterator.SEG_MOVETO) {
 				if (!up) {
 					block.addAll([4003, 4003])
 					up=true
 				}
-				block.addAll([(int)(xmargin+scale*(tx+pt[0])), (int)(bh-ymargin-scale*(ty+pt[1]))])
-				//println("moveto")
+				block.addAll([xscale(pt[0]),yscale(pt[1])])
 			}
-			//println("pt="+pt)
 			path.next()
 		}
 		sendBlock(block)
