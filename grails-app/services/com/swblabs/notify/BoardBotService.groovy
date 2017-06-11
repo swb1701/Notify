@@ -41,7 +41,7 @@ class BoardBotService {
 			Thread.start {
 				while(running) {
 					println("Polling external iboardbot server")
-					def blocks=receiver(mac,1) //get full response from iboardbot server
+					def blocks=receiver(mac,1,false) //get full response from iboardbot server
 					if (blocks.size()>0) {
 						sendBlocks(mac,blocks)
 					}
@@ -399,13 +399,15 @@ class BoardBotService {
 	 * Receive the next drawing for the bot as a list of blocks (or empty if a reset is sent).  We
 	 * might retransmit the set (possibly altering sequence numbers).
 	 */
-	def receiver(String mac,int ext) {
+	def receiver(String mac,int ext,boolean outside=true) {
 		//return(clearBoard)
-		if (ext==3) {
-			ext=0
-			setProxy(mac,true)
-		} else {
+		if (outside) {
+			if (ext==3) {
+				ext=0
+				setProxy(mac,true)
+			} else {
 			setProxy(mac,false)
+			}
 		}
 		def blockNumber=blockNumberMap[ext+">"+mac]
 		if (blockNumber==null) {
