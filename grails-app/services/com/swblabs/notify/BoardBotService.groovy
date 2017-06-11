@@ -135,8 +135,54 @@ class BoardBotService {
 		BoardBot bb=BoardBot.first()
 		sendBlock(bb.mac,cmds)
 	}
+	
+	def clock() {
+		BoardBot bb=BoardBot.first()
+		//sendBlock(bb.mac,testBoard[0])
+		SimpleDateFormat sdf=new SimpleDateFormat("hh:mm")
+		String last="XXXXX"
+		while(true) {
+			String next=sdf.format(new Date())
+			if (next!=last) {
+				def blocks=[]
+				int lmargin=350
+				int emargin=80
+				if (next[0]!='0') {
+					if (next[0]!=last[0]) {
+						Rectangle rect=new Rectangle(lmargin+0*(400+250),200,400,800)
+						Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y,(int)rect.width+2*emargin,(int)rect.height)
+						blocks<<erase(erect)
+						blocks<<plotText(next[0],rect,0,false,2)
+					}
+				}
+				if (next[1]!=last[1]) {
+					Rectangle rect=new Rectangle(lmargin+1*(400+250),200,400,800)
+					Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y,(int)rect.width+2*emargin,(int)rect.height)
+					blocks<<erase(erect)
+					blocks<<plotText(next[1],rect,0,false,2)
+				}
+				if (next[2]!=last[2]) {
+				  blocks<<plotText(":",new Rectangle(lmargin+1300,200,150,800),0,false,2)
+				}
+				for(int i=3;i<5;i++) {
+					if (next[i]!=last[i]) {
+						Rectangle rect=new Rectangle(lmargin+450+(i-1)*(400+250),200,400,800)
+						Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y,(int)rect.width+2*emargin,(int)rect.height)
+						blocks<<erase(erect)
+						blocks<<plotText(next[i],rect,0,false,2)
+					}
+				}
+				def block=mergeBlocks(blocks)
+				sendBlock(block)
+				last=next
+			}
+			Thread.sleep(5000)
+		}
+	}
 
 	def test() {
+		clock()
+		/*
 		BoardBot bb=BoardBot.first()
 		//sendBlock(bb.mac,testBoard[0])
 		SimpleDateFormat sdf=new SimpleDateFormat("h:mm")
@@ -148,6 +194,7 @@ class BoardBotService {
 			last=next
 			Thread.sleep(5000)
 		}
+		*/
 	}
 
 	def clear() {
@@ -155,11 +202,38 @@ class BoardBotService {
 		sendBlock(bb.mac,clearBoard[0])
 	}
 	
+	def mergeBlocks(blocks) {
+		def result=blocks[0]
+		if (blocks.size()>1) {
+			for(int i=1;i<blocks.size();i++) {
+				result.addAll(blocks[i][6..-5])	
+			}
+			result.addAll([4003, 4003, 0, 0, 4002, 4002])
+		}
+		return(result)
+	}
+	
 	def plotText(String text) {
 		plotText(text,new Rectangle(0,0,3600,1200))
 	}
+	
+	def erase(Rectangle bounds) {
+		def block=[4009, 4001, 4009, 0, 4001, 4001, 4003, 4003]
+		int ulx=bounds.x
+		int uly=bounds.y+bounds.height
+		int lrx=bounds.x+bounds.width
+		int lry=bounds.y
+		block.addAll([ulx,uly,4005,4005]) //move to upper left and activate eraser
+		int sweep=100
+		for(int y=uly;y>lry;y=y-2*sweep) {
+			block.addAll([lrx,y,lrx,y-100,ulx,y-100,ulx,y-200])
+		}
+		block.addAll([lrx,lry])
+        block.addAll([4003,4003,4002,4002])
+		return(block)
+	}
 
-	def plotText(String text,Rectangle bounds,int tmargin=200) {
+	def plotText(String text,Rectangle bounds,int tmargin=200,boolean send=true,int chooseScale=0) {
 		int bx=0
 		int by=0
 		int bw=3600 //board width
@@ -181,11 +255,17 @@ class BoardBotService {
 		TextLayout tl= new TextLayout(text, font, frc)
 		Shape outline = tl.getOutline(null)
 		Rectangle rect = outline.getBounds()
-		println(rect)
+		//println(rect)
 		double sx=(bw-2*tmargin)/rect.width //scale if based on x
 		double sy=(bh-2*tmargin)/rect.height //scale if based on y
 		double scale=sx
-		if (sy<sx) scale=sy
+		if (chooseScale==0) {
+		  if (sy<sx) scale=sy
+		} else if (chooseScale==1) {
+		  scale=sx
+		} else if (chooseScale==2) {
+		  scale=sy
+		}
 		int xmargin=(bw-scale*rect.width)/2
 		int ymargin=(bh-scale*rect.height)/2
 		double tx=-1*rect.x
@@ -197,7 +277,7 @@ class BoardBotService {
 		/*
 		 //uncomment to show bounding boxes
 		 block.addAll([bx,by,4004,4004,bx,by+bh,bx+bw,by+bh,bx+bw,by,bx,by,4003,4003]) //target sub-region (or whole board)
-		 block.addAll([xscale(rect.x),yscale(rect.y)])
+		 block.addAll([xscale(rect.x),yscale(rect.y)]) //show text bounding box
 		 block.addAll([4004,4004,xscale(rect.x),yscale(rect.y+rect.height)])
 		 block.addAll([xscale(rect.x+rect.width),yscale(rect.y+rect.height)])
 		 block.addAll([xscale(rect.x+rect.width),yscale(rect.y)])
@@ -225,7 +305,10 @@ class BoardBotService {
 			}
 			path.next()
 		}
-		sendBlock(block)
+		if (send) {
+		  sendBlock(block)
+		}
+		return(block)
 	}
 
 	def receiver(int ext) { //test receiver on first board bot

@@ -45,7 +45,7 @@ class AdminController {
 
 	def bbtest(int ext) {
 		def blocks=BoardBotService.receiver(ext)
-		println("returning:"+blocks)
+		//println("returning:"+blocks)
 		def map=[blocks:blocks]
 		render(map as JSON)
 	}
