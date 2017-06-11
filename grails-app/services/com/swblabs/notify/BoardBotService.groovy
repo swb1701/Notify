@@ -22,6 +22,7 @@ class BoardBotService {
 	Map proxyMap=[:]
 	Map botHandlerMap=[:]
 	static boolean clockRunning=false
+	static boolean drawBounds=false
 
 	class Proxy { //proxy traffic from iboardbot's server to ours if desired
 
@@ -263,6 +264,44 @@ class BoardBotService {
 		}
 	}
 	
+	def breakLines(String text,int len) {
+		if (text.size()<=len) {
+			return([text])
+		} else {
+			int i=0
+			int brk=-1
+			while((i<=len || text[i]!=' ') && i<text.size()) {
+				if (text[i]==' ') brk=i
+				i++
+			}
+			println("brk="+brk)
+			if (brk!=-1) {
+				def parts=[text.substring(0,brk)]
+				parts.addAll(breakLines(text.substring(brk+1),len))
+				return(parts)
+			}
+		}
+	}
+	
+	def plotMultilineText(String text) {
+		int len=20 //max line
+		int bw=3600
+		int bh=1200
+		int ymargin=25
+		int linespace=50
+		int xmargin=25
+		def lines=breakLines(text,len)
+		int rows=lines.size()
+		int rh=(bh-2*ymargin-(rows-1)*linespace)/rows
+		def blocks=[]
+		for(int i=0;i<rows;i++) {
+			//blocks<<drawRect(xmargin,bh-ymargin-(rh+linespace)*i-rh,bw-2*xmargin,rh,false)
+			blocks<<plotText(lines[i],new Rectangle(xmargin,bh-ymargin-(rh+linespace)*i-rh,bw-2*xmargin,rh),0,false,2)
+		}
+		def block=mergeBlocks(blocks)
+		sendBlock(block)
+	}
+	
 	def plotText(String text) {
 		plotText(text,new Rectangle(0,0,3600,1200))
 	}
@@ -281,6 +320,29 @@ class BoardBotService {
 		block.addAll([lrx,lry])
         block.addAll([4003,4003,4002,4002])
 		return(block)
+	}
+	
+	def drawBorder(int xmargin=25,int ymargin=25) {
+		int bw=3600
+		int bh=1200
+		int rx=xmargin
+		int ry=ymargin
+		int rw=bw-2*xmargin
+		int rh=bh-2*ymargin
+		def block=[4009,4001,4009,0,4001,4001,4003,4003,rx,ry,4004,4004,rx,ry+rh,rx+rw,ry+rh,rx+rw,ry,rx,ry,4003,4003,0,0,4002,4002]
+		sendBlock(block)
+	}
+	
+	def drawRect(int rx,int ry,int rw,int rh,boolean send=true) {
+		println("x="+rx+" y="+ry+" rw="+rw+" rh="+rh)
+		def block=[4009,4001,4009,0,4001,4001,4003,4003,rx,ry,4004,4004,rx,ry+rh,rx+rw,ry+rh,rx+rw,ry,rx,ry,4003,4003]
+		if (send) block.addAll([0,0])
+		block.addAll([4002,4002])
+		if (send) {
+			sendBlock(block)
+		} else {
+			return(block)
+		}
 	}
 
 	def plotText(String text,Rectangle bounds,int tmargin=200,boolean send=true,int chooseScale=0) {
@@ -324,8 +386,8 @@ class BoardBotService {
 		def xscale={x->(int)(bx+xmargin+scale*(tx+x))}
 		def yscale={y->(int)(by+bh-ymargin-scale*(ty+y))}
 		boolean up=true
-		/*
-		 //uncomment to show bounding boxes
+		if (drawBounds) {
+		 //shows bounding boxes
 		 block.addAll([bx,by,4004,4004,bx,by+bh,bx+bw,by+bh,bx+bw,by,bx,by,4003,4003]) //target sub-region (or whole board)
 		 block.addAll([xscale(rect.x),yscale(rect.y)]) //show text bounding box
 		 block.addAll([4004,4004,xscale(rect.x),yscale(rect.y+rect.height)])
@@ -333,7 +395,7 @@ class BoardBotService {
 		 block.addAll([xscale(rect.x+rect.width),yscale(rect.y)])
 		 block.addAll([xscale(rect.x),yscale(rect.y)])
 		 up=false
-		*/
+		}
 		PathIterator path=outline.getPathIterator(null,0.25)
 		float[] pt=new float[2]
 		float[] mv=new float[2]

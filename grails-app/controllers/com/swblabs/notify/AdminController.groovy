@@ -58,8 +58,26 @@ class AdminController {
 		render(text:"OK")
 	}
 	
+	def breakTest(String text) {
+		render(text:BoardBotService.breakLines(text,20))
+	}
+	
 	def plot(String text) {
 		BoardBotService.plotText(text)
+		render(text:"OK")
+	}
+	
+	def plotml(String text) {
+		BoardBotService.plotMultilineText(text)
+		render(text:"OK")
+	}
+	
+	def border() {
+		if (params.xm!=null && params.ym!=null) {
+			BoardBotService.drawBorder(Integer.parseInt(params.xm),Integer.parseInt(params.ym))
+		} else {
+			BoardBotService.drawBorder()
+		}
 		render(text:"OK")
 	}
 
