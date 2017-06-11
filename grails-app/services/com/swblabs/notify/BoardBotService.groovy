@@ -161,6 +161,12 @@ class BoardBotService {
 						}
 						blocks<<plotText(next[0],rect,0,false,2)
 					}
+				} else if (next[0]!=last[0]) { //flip from 1 to 0
+					Rectangle rect=new Rectangle(lmargin+0*(400+250),200,400,800)
+					if (last[0]!='X') {
+					  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y,(int)rect.width+2*emargin,(int)rect.height)
+					  blocks<<erase(erect)
+					}
 				}
 				if (next[1]!=last[1]) {
 					Rectangle rect=new Rectangle(lmargin+1*(400+250),200,400,800)
