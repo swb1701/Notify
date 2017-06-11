@@ -21,6 +21,7 @@ class BoardBotService {
 	String[] pollURLs=["http://localhost:8080/admin/bbPoll", "http://ibb.jjrobots.com/ibbsvr/ibb.php"]
 	Map proxyMap=[:]
 	Map botHandlerMap=[:]
+	static boolean clockRunning=false
 
 	class Proxy { //proxy traffic from iboardbot's server to ours if desired
 
@@ -141,12 +142,31 @@ class BoardBotService {
 		sendBlock(bb.mac,cmds)
 	}
 	
+	def proxyOn() {
+		BoardBot bb=BoardBot.first()
+		setProxy(bb.mac,true)
+	}
+	
+	def proxyOff() {
+		BoardBot bb=BoardBot.first()
+		setProxy(bb.mac,false)
+	}
+	
+	def clockOn() {
+		Thread.start { clock(); }
+	}
+	
+	def clockOff() {
+		clockRunning=false
+	}
+
 	def clock() {
+		clockRunning=true
 		BoardBot bb=BoardBot.first()
 		//sendBlock(bb.mac,testBoard[0])
 		SimpleDateFormat sdf=new SimpleDateFormat("hh:mm")
 		String last="XXXXX"
-		while(true) {
+		while(clockRunning) {
 			String next=sdf.format(new Date())
 			if (next!=last) {
 				def blocks=[]

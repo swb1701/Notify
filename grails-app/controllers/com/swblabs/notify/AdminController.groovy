@@ -25,6 +25,26 @@ class AdminController {
 		[btlist:NotifyService.btMap.values().flatten(),nameMap:nameMap]
 	}
 	
+	def proxyOn() {
+		BoardBotService.proxyOn()
+		render(text:"OK")
+	}
+	
+	def proxyOff() {
+		BoardBotService.proxyOff()
+		render(text:"OK")
+	}
+	
+	def clockOn() {
+		BoardBotService.clockOn()
+		render(text:"OK")
+	}
+	
+	def clockOff() {
+		BoardBotService.clockOff()
+		render(text:"OK")
+	}
+
 	def bbdemo() {
 	}
 	
