@@ -58,6 +58,7 @@ class BoardBotService {
 
 		def sendBlock(cmds) { //send block of commands as int array
 			cmds[3]=seq
+			println("Sending (${cmds.size()}):${cmds}")
 			seq=(seq+1)%256 //just keep to 8-bits
 			blockQueue.add(packBlock(cmds))
 		}
@@ -118,7 +119,9 @@ class BoardBotService {
 		BotHandler bh=getBotHandler(mac)
 		synchronized(bh) {
 			blocks.each { block ->
-				bh.sendBlock(block)
+				splitBlock(block).each { sblock ->
+					bh.sendBlock(sblock)
+				}
 			}
 		}
 
@@ -127,7 +130,9 @@ class BoardBotService {
 	def sendBlock(String mac,cmds) {
 		BotHandler bh=getBotHandler(mac)
 		synchronized(bh) {
-			bh.sendBlock(cmds)
+			splitBlock(cmds).each { sblock ->
+				bh.sendBlock(sblock)
+			}
 		}
 	}
 
@@ -211,6 +216,17 @@ class BoardBotService {
 			result.addAll([4003, 4003, 0, 0, 4002, 4002])
 		}
 		return(result)
+	}
+	
+	def splitBlock(block,int limit=512) { //block must be less than 256 commands (512 12-bit ints)
+		if (block.size()<=limit) { //if it's less then just return it as only element of return set
+			return([block])
+		} else {
+			def result=[]
+			result<<block[0..(limit-1)] //take the first block of maximum size
+			result.addAll(splitBlock([4009,4001,4009,0]+block[limit..-1])) //re-add the header and the remaining block and recursively split
+			return(result)
+		}
 	}
 	
 	def plotText(String text) {
