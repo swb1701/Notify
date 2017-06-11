@@ -206,7 +206,7 @@ class BoardBotService {
 		def result=blocks[0]
 		if (blocks.size()>1) {
 			for(int i=1;i<blocks.size();i++) {
-				result.addAll(blocks[i][6..-5])	
+				result.addAll(blocks[i][6..-3])	
 			}
 			result.addAll([4003, 4003, 0, 0, 4002, 4002])
 		}
@@ -289,7 +289,11 @@ class BoardBotService {
 		while(!path.isDone()) {
 			int type=path.currentSegment(pt)
 			if (type==PathIterator.SEG_CLOSE) {
-				block.addAll([4003, 4003, 0, 0, 4002, 4002])
+				if (send) {
+					block.addAll([4003, 4003, 0, 0, 4002, 4002])
+				} else {
+					block.addAll([4003, 4003, 4002, 4002])
+				}
 			} else if (type==PathIterator.SEG_LINETO) {
 				if (up) {
 					block.addAll([4004, 4004])
