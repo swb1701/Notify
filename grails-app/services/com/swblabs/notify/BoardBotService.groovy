@@ -155,15 +155,19 @@ class BoardBotService {
 				if (next[0]!='0') {
 					if (next[0]!=last[0]) {
 						Rectangle rect=new Rectangle(lmargin+0*(400+250),200,400,800)
-						Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y,(int)rect.width+2*emargin,(int)rect.height)
-						blocks<<erase(erect)
+						if (last[0]!='X') {
+						  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y,(int)rect.width+2*emargin,(int)rect.height)
+						  blocks<<erase(erect)
+						}
 						blocks<<plotText(next[0],rect,0,false,2)
 					}
 				}
 				if (next[1]!=last[1]) {
 					Rectangle rect=new Rectangle(lmargin+1*(400+250),200,400,800)
-					Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y,(int)rect.width+2*emargin,(int)rect.height)
-					blocks<<erase(erect)
+					if (last[1]!='X') {
+					  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y,(int)rect.width+2*emargin,(int)rect.height)
+					  blocks<<erase(erect)
+					}
 					blocks<<plotText(next[1],rect,0,false,2)
 				}
 				if (next[2]!=last[2]) {
@@ -172,8 +176,10 @@ class BoardBotService {
 				for(int i=3;i<5;i++) {
 					if (next[i]!=last[i]) {
 						Rectangle rect=new Rectangle(lmargin+450+(i-1)*(400+250),200,400,800)
-						Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y,(int)rect.width+2*emargin,(int)rect.height)
-						blocks<<erase(erect)
+						if (last[i]!='X') {
+						  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y,(int)rect.width+2*emargin,(int)rect.height)
+						  blocks<<erase(erect)
+						}
 						blocks<<plotText(next[i],rect,0,false,2)
 					}
 				}
@@ -208,12 +214,14 @@ class BoardBotService {
 	}
 	
 	def mergeBlocks(blocks) {
-		def result=blocks[0]
+		def result=blocks[0][0..-3]
 		if (blocks.size()>1) {
 			for(int i=1;i<blocks.size();i++) {
 				result.addAll(blocks[i][6..-3])	
 			}
 			result.addAll([4003, 4003, 0, 0, 4002, 4002])
+		} else {
+			result=result+[0,0,4002,4002]
 		}
 		return(result)
 	}
@@ -302,14 +310,15 @@ class BoardBotService {
 		*/
 		PathIterator path=outline.getPathIterator(null,0.25)
 		float[] pt=new float[2]
+		float[] mv=new float[2]
 		while(!path.isDone()) {
 			int type=path.currentSegment(pt)
 			if (type==PathIterator.SEG_CLOSE) {
-				if (send) {
-					block.addAll([4003, 4003, 0, 0, 4002, 4002])
-				} else {
-					block.addAll([4003, 4003, 4002, 4002])
+				if (up) {
+					block.addAll([4004, 4004])
+					up=false
 				}
+				block.addAll([xscale(mv[0]),yscale(mv[1])])
 			} else if (type==PathIterator.SEG_LINETO) {
 				if (up) {
 					block.addAll([4004, 4004])
@@ -321,9 +330,16 @@ class BoardBotService {
 					block.addAll([4003, 4003])
 					up=true
 				}
+				mv[0]=pt[0]
+				mv[1]=pt[1]
 				block.addAll([xscale(pt[0]),yscale(pt[1])])
 			}
 			path.next()
+		}
+		if (send) {
+			block.addAll([4003, 4003, 0, 0, 4002, 4002])
+		} else {
+			block.addAll([4003, 4003, 4002, 4002])
 		}
 		if (send) {
 		  sendBlock(block)
