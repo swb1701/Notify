@@ -270,7 +270,7 @@ class BoardBotService {
 		} else {
 			int i=0
 			int brk=-1
-			while((i<=len || text[i]!=' ') && i<text.size()) {
+			while(i<text.size() && (i<=len || text[i]!=' ')) {
 				if (text[i]==' ') brk=i
 				i++
 			}
@@ -279,12 +279,14 @@ class BoardBotService {
 				def parts=[text.substring(0,brk)]
 				parts.addAll(breakLines(text.substring(brk+1),len))
 				return(parts)
+			} else {
+				return([text])
 			}
 		}
 	}
 	
 	def plotMultilineText(String text) {
-		int len=20 //max line
+		int len=25 //max line
 		int bw=3600
 		int bh=1200
 		int ymargin=25
@@ -294,9 +296,10 @@ class BoardBotService {
 		int rows=lines.size()
 		int rh=(bh-2*ymargin-(rows-1)*linespace)/rows
 		def blocks=[]
+		int max=getMaxLineHeight(lines)
 		for(int i=0;i<rows;i++) {
 			//blocks<<drawRect(xmargin,bh-ymargin-(rh+linespace)*i-rh,bw-2*xmargin,rh,false)
-			blocks<<plotText(lines[i],new Rectangle(xmargin,bh-ymargin-(rh+linespace)*i-rh,bw-2*xmargin,rh),0,false,2)
+			blocks<<plotText(lines[i],new Rectangle(xmargin,bh-ymargin-(rh+linespace)*i-rh,bw-2*xmargin,rh),0,false,2,max)
 		}
 		def block=mergeBlocks(blocks)
 		sendBlock(block)
@@ -344,8 +347,23 @@ class BoardBotService {
 			return(block)
 		}
 	}
+	
+	def getMaxLineHeight(lines) {
+		int max=0
+		BufferedImage img=new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB) //any other way to get a g2d?
+		Graphics2D g2=img.createGraphics()
+		FontRenderContext frc = g2.getFontRenderContext()
+		Font font = new Font("Helvetica", 1, 120) //parm font later
+		lines.each { text ->
+			TextLayout tl= new TextLayout(text, font, frc)
+			Shape outline = tl.getOutline(null)
+			Rectangle rect = outline.getBounds()
+			if (rect.height>max) max=rect.height
+		}
+		return(max)
+	}
 
-	def plotText(String text,Rectangle bounds,int tmargin=200,boolean send=true,int chooseScale=0) {
+	def plotText(String text,Rectangle bounds,int tmargin=200,boolean send=true,int chooseScale=0,int forcedHeight=-1) {
 		int bx=0
 		int by=0
 		int bw=3600 //board width
@@ -367,7 +385,9 @@ class BoardBotService {
 		TextLayout tl= new TextLayout(text, font, frc)
 		Shape outline = tl.getOutline(null)
 		Rectangle rect = outline.getBounds()
-		//println(rect)
+		if (forcedHeight!=-1) {
+			rect=new Rectangle((int)rect.x,(int)rect.y,(int)rect.width,(int)forcedHeight)
+		}
 		double sx=(bw-2*tmargin)/rect.width //scale if based on x
 		double sy=(bh-2*tmargin)/rect.height //scale if based on y
 		double scale=sx
