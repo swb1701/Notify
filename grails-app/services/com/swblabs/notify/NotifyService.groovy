@@ -28,6 +28,7 @@ class NotifyService {
 	static Object lock=new Object();
 	static Map keyToIP=[:]
 	static File dataFile=null
+	def BoardBotService
 
 	class Client {
 		String awsQueue
@@ -96,7 +97,7 @@ class NotifyService {
 	static ConcurrentHashMap<String,Map> btMap=new ConcurrentHashMap<String,Map>()
 	
 	def cleanupThreads() {
-		relayMessage(null,null)
+		relayMessage2(null,null)
 	}
 	
 	def logData(String line) {
@@ -139,7 +140,28 @@ class NotifyService {
 		}
 	}
 
-	synchronized relayMessage(String awsQueue,String message) { //since we may have lots of queues, let's synchronized this so we don't conflict during cleanup
+	synchronized relayMessage(String awsQueue,String message) {
+		if (message.indexOf("bbdraw")>-1) { //key bbdraw will trigger
+			BoardBot bb=BoardBot.findByQueue(awsQueue)
+			if (bb!=null) {
+				//now do full parse -- will go to all boardbots for now (e.g. mine)
+				Map cmd=null
+				try {
+					def jsonSlurper=new JsonSlurper()
+					cmd=jsonSlurper.parseText(message)
+					println("bb json:"+cmd)
+					if (cmd.cmd=="bbdraw") {
+						BoardBotService.runCommand(cmd)
+						return //a real bbdraw command, don't send it beyond boardbot
+					}
+				} catch (Exception e) {
+				}
+			}
+		}
+		relayMessage2(awsQueue,message)
+	}
+
+	synchronized relayMessage2(String awsQueue,String message) { //since we may have lots of queues, let's synchronized this so we don't conflict during cleanup
 		if (awsQueue!=null) println("Relaying message "+message)
 		def expired=[] //client we want to shut down
 		long now=System.currentTimeMillis() //get the current time

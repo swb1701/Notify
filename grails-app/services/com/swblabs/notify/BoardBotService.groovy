@@ -234,6 +234,23 @@ class BoardBotService {
 		}
 		*/
 	}
+	
+	def runCommand(Map cmd) {  //dispatch boardbot commands from notify
+		if (cmd.cmd=="bbdraw") {
+			String arg=cmd.arg
+			switch(arg) {
+				case 'clear': clear(); break
+				case 'proxyOn': proxyOn(); break
+				case 'proxyOff': proxyOff(); break
+				case 'clockOn': clockOn(); break
+				case 'clockOff': clockOff(); break
+				case 'text': plotMultilineText(cmd.text); break
+				default:
+					println("Unknown command:"+cmd)
+					break
+			}
+		}
+	}
 
 	def clear() {
 		BoardBot bb=BoardBot.first()
