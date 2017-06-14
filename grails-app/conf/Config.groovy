@@ -94,8 +94,13 @@ grails.plugin.springsecurity.authority.className = 'com.swblabs.notify.Role'
 
 grails.plugin.springsecurity.controllerAnnotations.staticRules = [
 	'/**':								['permitAll'],
-	'/admin/bbPoll':					['permitAll'],
+	'/connection':						['permitAll'],
 	'/api/**':							['permitAll'],
+	'/boardbot/**':						['ROLE_ADMIN'],
+	'/address/**':						['ROLE_ADMIN'],
+	'/admin/**':						['ROLE_ADMIN'],
+	'/notification/**':					['ROLE_ADMIN'],
+	'/slackhook/**':					['ROLE_ADMIN'],
 	'/token/**':						['ROLE_ADMIN'],
 	'/searchable/**':					['ROLE_ADMIN'],
 	'/user/**':							['ROLE_ADMIN'],

@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 @Transactional
 class BoardBotService {
 
-	String[] pollURLs=["http://localhost:8080/admin/bbPoll", "http://ibb.jjrobots.com/ibbsvr/ibb.php"]
+	String[] pollURLs=["http://localhost:8080/connection/bbPoll", "http://ibb.jjrobots.com/ibbsvr/ibb.php"]
 	Map proxyMap=[:]
 	Map botHandlerMap=[:]
 	static boolean clockRunning=false
