@@ -312,6 +312,12 @@ class BoardBotService {
 		def lines=breakLines(text,len)
 		int rows=lines.size()
 		int rh=(bh-2*ymargin-(rows-1)*linespace)/rows
+		if (rh>250) {
+			rh=250;
+			int extra=(bh-rows*rh)
+			ymargin=extra/(rows+1)
+			linespace=extra/(rows+1)
+		}
 		def blocks=[]
 		int max=getMaxLineHeight(lines)
 		for(int i=0;i<rows;i++) {
@@ -371,6 +377,7 @@ class BoardBotService {
 		Graphics2D g2=img.createGraphics()
 		FontRenderContext frc = g2.getFontRenderContext()
 		Font font = new Font("Helvetica", 1, 120) //parm font later
+		int i=0
 		lines.each { text ->
 			TextLayout tl= new TextLayout(text, font, frc)
 			Shape outline = tl.getOutline(null)
