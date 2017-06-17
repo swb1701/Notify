@@ -7,6 +7,11 @@ which have a unique number as well as an SQS queue name associated with them.  T
 may optionally have credentials for access to that queue (and for synthesis of audio
 if desired).
 
+Updates: Notify also includes experimental support for detecting BTLE devices on its endpoints (for
+instance to send notifications to the closest notifier to a user (e.g. wearing a FitBit or BTLE device).
+It also now has support for drawing select notifications to the iBoardBot.  These updates are in the
+codebase but not documented yet.
+
 A client may retrieve messages from the notifier using the token in a few ways.  It may act as a web
 client and receive the next text message (getMessage).  It may be a sessionless device
 and get the next text message (getMessage with optional key parameter).  It may also get an audio representation
