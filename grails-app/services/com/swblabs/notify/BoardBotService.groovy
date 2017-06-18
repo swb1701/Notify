@@ -1,5 +1,6 @@
 package com.swblabs.notify
 
+import grails.converters.JSON
 import grails.transaction.Transactional
 
 import java.awt.Font
@@ -21,6 +22,7 @@ class BoardBotService {
 	String[] pollURLs=["http://localhost:8080/connection/bbPoll", "http://ibb.jjrobots.com/ibbsvr/ibb.php"]
 	Map proxyMap=[:]
 	Map botHandlerMap=[:]
+	def grailsApplication
 	static boolean clockRunning=false
 	static boolean drawBounds=false
 
@@ -45,6 +47,22 @@ class BoardBotService {
 					def blocks=receiver(mac,1,false) //get full response from iboardbot server
 					if (blocks.size()>0) {
 						sendBlocks(mac,blocks)
+						if (blocks[0].size()>6) {
+							try { //cache the file for future recall
+								int cnt=1
+								while(true) {
+									String name=String.format("incoming%04d",cnt++)
+									File file=grailsApplication.parentContext.getResource("ibb/"+name+".json").file
+									if (!file.exists()) {
+										println("Saving "+name)
+										file<<(blocks as JSON)
+										break
+									}
+								}
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+						}
 					}
 				}
 			}
@@ -249,6 +267,7 @@ class BoardBotService {
 				case 'clockOn': clockOn(); break
 				case 'clockOff': clockOff(); break
 				case 'text': plotMultilineText(cmd.text); break
+				case 'sendFile': sendFile(cmd.name); break
 				default:
 					println("Unknown command:"+cmd)
 					break
@@ -259,6 +278,17 @@ class BoardBotService {
 	def clear() {
 		BoardBot bb=BoardBot.first()
 		sendBlock(bb.mac,clearBoard[0])
+	}
+	
+	def sendFile(String name) {
+		BoardBot bb=BoardBot.first()
+		File file=grailsApplication.parentContext.getResource("ibb/"+name+".json").file
+		if (file.exists()) {
+			def json=JSON.parse(file.text)
+			sendBlocks(bb.mac,json)
+		} else {
+			println("No file: "+name)
+		}
 	}
 	
 	def mergeBlocks(blocks) {

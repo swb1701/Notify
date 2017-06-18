@@ -30,6 +30,11 @@ class AdminController {
 		render(text:"OK")
 	}
 	
+	def sendFile(String name) {
+		BoardBotService.sendFile(name)
+		render(text:"OK")
+	}
+	
 	def proxyOff() {
 		BoardBotService.proxyOff()
 		render(text:"OK")
