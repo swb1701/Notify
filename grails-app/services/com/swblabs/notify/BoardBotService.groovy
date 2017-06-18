@@ -177,7 +177,7 @@ class BoardBotService {
 					if (next[0]!=last[0]) {
 						Rectangle rect=new Rectangle(lmargin+0*(400+250),200,400,800)
 						if (last[0]!='X') {
-						  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y+emargin,(int)rect.width+2*emargin,(int)rect.height+2*emargin)
+						  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y-emargin,(int)rect.width+2*emargin,(int)rect.height+2*emargin)
 						  blocks<<erase(erect)
 						  blocks<<erase(erect)
 						}
@@ -186,7 +186,7 @@ class BoardBotService {
 				} else if (next[0]!=last[0]) { //flip from 1 to 0
 					Rectangle rect=new Rectangle(lmargin+0*(400+250),200,400,800)
 					if (last[0]!='X') {
-					  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y+emargin,(int)rect.width+2*emargin,(int)rect.height+2*emargin)
+					  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y-emargin,(int)rect.width+2*emargin,(int)rect.height+2*emargin)
 					  blocks<<erase(erect)
 					  blocks<<erase(erect)
 					}
@@ -194,7 +194,7 @@ class BoardBotService {
 				if (next[1]!=last[1]) {
 					Rectangle rect=new Rectangle(lmargin+1*(400+250),200,400,800)
 					if (last[1]!='X') {
-					  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y+emargin,(int)rect.width+2*emargin,(int)rect.height+2*emargin)
+					  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y-emargin,(int)rect.width+2*emargin,(int)rect.height+2*emargin)
 					  blocks<<erase(erect)
 					  blocks<<erase(erect)
 					}
@@ -207,7 +207,7 @@ class BoardBotService {
 					if (next[i]!=last[i]) {
 						Rectangle rect=new Rectangle(lmargin+450+(i-1)*(400+250),200,400,800)
 						if (last[i]!='X') {
-						  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y+emargin,(int)rect.width+2*emargin,(int)rect.height+2*emargin)
+						  Rectangle erect=new Rectangle((int)rect.x-emargin,(int)rect.y-emargin,(int)rect.width+2*emargin,(int)rect.height+2*emargin)
 						  blocks<<erase(erect)
 						  blocks<<erase(erect)
 						}
