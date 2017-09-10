@@ -28,6 +28,7 @@ class NotifyService {
 	static Object lock=new Object();
 	static Map keyToIP=[:]
 	static File dataFile=null
+	static File sensorFile=null
 	def BoardBotService
 
 	class Client {
@@ -107,6 +108,13 @@ class NotifyService {
 		dataFile<<line<<'\n'
 	}
 	
+	def logSensors(String line) {
+		if (sensorFile==null) {
+			sensorFile=new File("sensors.json")
+		}
+		sensorFile<<line<<'\n'
+	}
+
 	synchronized updateBluetooth(String sessionId,String ip,String data) {
 		try {
 			def jsonSlurper=new JsonSlurper()
@@ -134,6 +142,20 @@ class NotifyService {
 					}
 					//candidate for arriving event if previous time greater than threshold
 				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
+	
+	synchronized updateSensors(String sessionId,String ip,String sensors) {
+		try {
+			def jsonSlurper=new JsonSlurper()
+			def json=jsonSlurper.parseText(sensors)
+			try {
+				logSensors(JsonOutput.toJson([key:sessionId,ip:ip,data:json]))
+			} catch (Exception e) {
+				e.printStackTrace()
 			}
 		} catch (Exception e) {
 			e.printStackTrace()
@@ -198,10 +220,14 @@ class NotifyService {
 	/*
 	 * Get a message using a given token and session id
 	 */
-	String getMessage(String tokstr,String sessionId,String ip,String btle=null) {
+	String getMessage(String tokstr,String sessionId,String ip,String btle=null,String sensors=null) {
 		if (btle!=null) {
 			println("sessionId=${sessionId} ip=${ip} btle=${btle}")
 			updateBluetooth(sessionId,ip,btle)
+		}
+		if (sensors!=null) {
+			println("sessionId=${sessionId} ip=${ip} sensors=${sensors}")
+			updateSensors(sessionId,ip,sensors)
 		}
 		Token token=Token.findByName(tokstr)
 		if (token==null) {
@@ -231,8 +257,8 @@ class NotifyService {
 		}
 	}
 
-	def getAudio(String tokstr,String sessionId,String ip,OutputStream out,String btle=null) {
-		String msg=getMessage(tokstr,sessionId,ip,btle)
+	def getAudio(String tokstr,String sessionId,String ip,OutputStream out,String btle=null,String sensors=null) {
+		String msg=getMessage(tokstr,sessionId,ip,btle,sensors)
 		if (msg!=null) {
 			Token token=Token.findByName(tokstr)
 			if (token!=null) {

@@ -30,7 +30,8 @@ class ApiController {
 		String sessionId=(params.key==null)?session.getId():"fixed"+params.key //allow optional fixed key instead of session
 		String ip=request.getRemoteAddr()
 		String btle=params.btle
-		String result=NotifyService.getMessage(token,sessionId,ip,btle)
+		String sensors=params.sensors
+		String result=NotifyService.getMessage(token,sessionId,ip,btle,sensors)
 		if (result!=null) {
 			render(text:result)
 		} else {
@@ -46,6 +47,7 @@ class ApiController {
 		//response.outputStream.flush()
 		String ip=request.getRemoteAddr()
 		String btle=params.btle
-		NotifyService.getAudio(token,session.getId(),ip,response.outputStream,btle)
+		String sensors=params.sensors
+		NotifyService.getAudio(token,session.getId(),ip,response.outputStream,btle,sensors)
 	}
 }
