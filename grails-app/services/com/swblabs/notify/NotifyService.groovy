@@ -184,6 +184,7 @@ class NotifyService {
 	}
 
 	synchronized relayMessage2(String awsQueue,String message) { //since we may have lots of queues, let's synchronized this so we don't conflict during cleanup
+		if (message.indexOf('success')>-1) return //stop people from cluttering channels with success messages (temporary hack)
 		if (awsQueue!=null) println("Relaying message "+message)
 		def expired=[] //client we want to shut down
 		long now=System.currentTimeMillis() //get the current time
